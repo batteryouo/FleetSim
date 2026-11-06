@@ -1,0 +1,178 @@
+version: 1
+entries:
+- id: handrail
+  parts:
+  - center:
+    - 0
+    - 0
+    size:
+    - 2
+    - 0.09
+    yaw: 0
+    z_min: 0.7
+    z_max: 0.9
+    estimated: true
+  kind: static
+  lidar_transparent: false
+- id: iv_pole
+  parts:
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.04
+    - 0.04
+    yaw: 0
+    z_min: 0.1
+    z_max: 1.8
+    estimated: true
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.5
+    - 0.05
+    yaw: 0
+    z_min: 0
+    z_max: 0.08
+    estimated: true
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.05
+    - 0.5
+    yaw: 0
+    z_min: 0
+    z_max: 0.08
+    estimated: true
+  kind: movable
+  lidar_transparent: false
+- id: work_cart
+  parts:
+  - &id001
+    center:
+    - -0.25
+    - -0.2
+    size:
+    - 0.06
+    - 0.06
+    yaw: 0
+    z_min: 0
+    z_max: 0.8
+    estimated: true
+  - &id002
+    center:
+    - -0.25
+    - 0.2
+    size:
+    - 0.06
+    - 0.06
+    yaw: 0
+    z_min: 0
+    z_max: 0.8
+    estimated: true
+  - &id003
+    center:
+    - 0.25
+    - -0.2
+    size:
+    - 0.06
+    - 0.06
+    yaw: 0
+    z_min: 0
+    z_max: 0.8
+    estimated: true
+  - &id004
+    center:
+    - 0.25
+    - 0.2
+    size:
+    - 0.06
+    - 0.06
+    yaw: 0
+    z_min: 0
+    z_max: 0.8
+    estimated: true
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.6
+    - 0.5
+    yaw: 0
+    z_min: 0.8
+    z_max: 1
+    estimated: true
+  kind: movable
+  lidar_transparent: false
+- id: nurse_counter
+  parts:
+  - center:
+    - 0
+    - 0
+    size:
+    - 1.5
+    - 0.6
+    yaw: 0
+    z_min: 0
+    z_max: 1.1
+    estimated: true
+  kind: static
+  lidar_transparent: false
+- id: extinguisher
+  parts:
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.2
+    - 0.2
+    yaw: 0
+    z_min: 0.3
+    z_max: 0.9
+    estimated: true
+  kind: static
+  lidar_transparent: false
+- id: wheelchair
+  parts:
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+  - center:
+    - 0
+    - 0
+    size:
+    - 0.6
+    - 0.5
+    yaw: 0
+    z_min: 0.45
+    z_max: 0.55
+    estimated: true
+  - center:
+    - 0
+    - 0.25
+    size:
+    - 0.6
+    - 0.08
+    yaw: 0
+    z_min: 0.5
+    z_max: 1
+    estimated: true
+  kind: movable
+  lidar_transparent: false
+- id: glass_partition
+  parts:
+  - center:
+    - 0
+    - 0
+    size:
+    - 1
+    - 0.04
+    yaw: 0
+    z_min: 0
+    z_max: 2
+    estimated: true
+  kind: static
+  lidar_transparent: true

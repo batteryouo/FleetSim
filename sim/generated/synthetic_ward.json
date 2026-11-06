@@ -1,0 +1,1050 @@
+{
+  "version": 1,
+  "id": "synthetic_ward",
+  "frame": "rep103",
+  "primitives": [
+    {
+      "id": "west",
+      "center": [
+        -0.1,
+        0
+      ],
+      "size": [
+        4.2,
+        0.2
+      ],
+      "yaw": 1.5707963267948966,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "east_segment0",
+      "center": [
+        12.1,
+        -1.35
+      ],
+      "size": [
+        1.5,
+        0.2
+      ],
+      "yaw": 1.5707963267948966,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "east_segment1",
+      "center": [
+        12.1,
+        1.35
+      ],
+      "size": [
+        1.5,
+        0.2
+      ],
+      "yaw": 1.5707963267948966,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north0_front_segment0",
+      "center": [
+        0.7,
+        2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north0_front_segment1",
+      "center": [
+        3.3,
+        2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north0_back",
+      "center": [
+        2.0,
+        6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north0_left",
+      "center": [
+        0.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north0_right",
+      "center": [
+        4.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north1_front_segment0",
+      "center": [
+        4.7,
+        2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north1_front_segment1",
+      "center": [
+        7.3,
+        2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north1_back",
+      "center": [
+        6.0,
+        6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north1_left",
+      "center": [
+        4.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north1_right",
+      "center": [
+        8.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north2_front_segment0",
+      "center": [
+        8.8,
+        2.0
+      ],
+      "size": [
+        1.6,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north2_front_segment1",
+      "center": [
+        11.4,
+        2.0
+      ],
+      "size": [
+        1.2,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north2_back",
+      "center": [
+        10.0,
+        6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north2_left",
+      "center": [
+        8.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "north2_right",
+      "center": [
+        12.0,
+        4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south0_front_segment0",
+      "center": [
+        0.7,
+        -2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south0_front_segment1",
+      "center": [
+        3.3,
+        -2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south0_back",
+      "center": [
+        2.0,
+        -6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south0_left",
+      "center": [
+        0.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south0_right",
+      "center": [
+        4.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south1_front_segment0",
+      "center": [
+        4.7,
+        -2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south1_front_segment1",
+      "center": [
+        7.3,
+        -2.0
+      ],
+      "size": [
+        1.4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south1_back",
+      "center": [
+        6.0,
+        -6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south1_left",
+      "center": [
+        4.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south1_right",
+      "center": [
+        8.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south2_front_segment0",
+      "center": [
+        8.8,
+        -2.0
+      ],
+      "size": [
+        1.6,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south2_front_segment1",
+      "center": [
+        11.4,
+        -2.0
+      ],
+      "size": [
+        1.2,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south2_back",
+      "center": [
+        10.0,
+        -6.0
+      ],
+      "size": [
+        4,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south2_left",
+      "center": [
+        8.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "south2_right",
+      "center": [
+        12.0,
+        -4.0
+      ],
+      "size": [
+        0.2,
+        4
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2.5,
+      "type": "box"
+    },
+    {
+      "id": "rail_part0",
+      "type": "box",
+      "center": [
+        6.0,
+        1.85
+      ],
+      "size": [
+        2,
+        0.09
+      ],
+      "yaw": 0,
+      "z_min": 0.7,
+      "z_max": 0.9,
+      "kind": "static",
+      "lidar_transparent": false
+    },
+    {
+      "id": "cart_part0",
+      "type": "box",
+      "center": [
+        0.44999999999999996,
+        4.6
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "cart_part1",
+      "type": "box",
+      "center": [
+        0.44999999999999996,
+        5.0
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "cart_part2",
+      "type": "box",
+      "center": [
+        0.95,
+        4.6
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "cart_part3",
+      "type": "box",
+      "center": [
+        0.95,
+        5.0
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "cart_part4",
+      "type": "box",
+      "center": [
+        0.7,
+        4.8
+      ],
+      "size": [
+        0.6,
+        0.5
+      ],
+      "yaw": 0,
+      "z_min": 0.8,
+      "z_max": 1,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "pole_part0",
+      "type": "box",
+      "center": [
+        4.7,
+        4.8
+      ],
+      "size": [
+        0.04,
+        0.04
+      ],
+      "yaw": 0,
+      "z_min": 0.1,
+      "z_max": 1.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "pole_part1",
+      "type": "box",
+      "center": [
+        4.7,
+        4.8
+      ],
+      "size": [
+        0.5,
+        0.05
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.08,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "pole_part2",
+      "type": "box",
+      "center": [
+        4.7,
+        4.8
+      ],
+      "size": [
+        0.05,
+        0.5
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.08,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "glass_part0",
+      "type": "box",
+      "center": [
+        10.0,
+        5.5
+      ],
+      "size": [
+        1,
+        0.04
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 2,
+      "kind": "static",
+      "lidar_transparent": true
+    },
+    {
+      "id": "chair_part0",
+      "type": "box",
+      "center": [
+        0.44999999999999996,
+        -5.0
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "chair_part1",
+      "type": "box",
+      "center": [
+        0.44999999999999996,
+        -4.6
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "chair_part2",
+      "type": "box",
+      "center": [
+        0.95,
+        -5.0
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "chair_part3",
+      "type": "box",
+      "center": [
+        0.95,
+        -4.6
+      ],
+      "size": [
+        0.06,
+        0.06
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.8,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "chair_part4",
+      "type": "box",
+      "center": [
+        0.7,
+        -4.8
+      ],
+      "size": [
+        0.6,
+        0.5
+      ],
+      "yaw": 0,
+      "z_min": 0.45,
+      "z_max": 0.55,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "chair_part5",
+      "type": "box",
+      "center": [
+        0.7,
+        -4.55
+      ],
+      "size": [
+        0.6,
+        0.08
+      ],
+      "yaw": 0,
+      "z_min": 0.5,
+      "z_max": 1,
+      "kind": "movable",
+      "lidar_transparent": false
+    },
+    {
+      "id": "counter_part0",
+      "type": "box",
+      "center": [
+        4.8,
+        -4.8
+      ],
+      "size": [
+        1.5,
+        0.6
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 1.1,
+      "kind": "static",
+      "lidar_transparent": false
+    },
+    {
+      "id": "fire_part0",
+      "type": "box",
+      "center": [
+        8.7,
+        -4.8
+      ],
+      "size": [
+        0.2,
+        0.2
+      ],
+      "yaw": 0,
+      "z_min": 0.3,
+      "z_max": 0.9,
+      "kind": "static",
+      "lidar_transparent": false
+    },
+    {
+      "id": "direct_part0",
+      "type": "box",
+      "center": [
+        11.0,
+        -5.0
+      ],
+      "size": [
+        0.3,
+        0.3
+      ],
+      "yaw": 0,
+      "z_min": 0,
+      "z_max": 0.4,
+      "kind": "static",
+      "lidar_transparent": false
+    }
+  ],
+  "annotations": [
+    {
+      "id": "nurse_station",
+      "kind": "point",
+      "label": "nurse_station",
+      "point": [
+        1,
+        0
+      ],
+      "nav_point": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "utility",
+      "kind": "point",
+      "label": "utility",
+      "point": [
+        13,
+        0
+      ],
+      "nav_point": [
+        13,
+        0
+      ]
+    },
+    {
+      "id": "north0",
+      "kind": "point",
+      "label": "north0",
+      "point": [
+        2.0,
+        4.0
+      ],
+      "nav_point": [
+        2.0,
+        4.0
+      ]
+    },
+    {
+      "id": "north1",
+      "kind": "point",
+      "label": "north1",
+      "point": [
+        6.0,
+        4.0
+      ],
+      "nav_point": [
+        6.0,
+        4.0
+      ]
+    },
+    {
+      "id": "north2",
+      "kind": "point",
+      "label": "north2",
+      "point": [
+        10.0,
+        4.0
+      ],
+      "nav_point": [
+        10.0,
+        4.0
+      ]
+    },
+    {
+      "id": "south0",
+      "kind": "point",
+      "label": "south0",
+      "point": [
+        2.0,
+        -4.0
+      ],
+      "nav_point": [
+        2.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "south1",
+      "kind": "point",
+      "label": "south1",
+      "point": [
+        6.0,
+        -4.0
+      ],
+      "nav_point": [
+        6.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "south2",
+      "kind": "point",
+      "label": "south2",
+      "point": [
+        10.0,
+        -4.0
+      ],
+      "nav_point": [
+        10.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "utility_door",
+      "kind": "door",
+      "room": "utility",
+      "center": [
+        12.1,
+        0.0
+      ],
+      "width": 1.2,
+      "yaw": 1.5707963267948966,
+      "nav_point": [
+        13,
+        0
+      ]
+    },
+    {
+      "id": "north0_door",
+      "kind": "door",
+      "room": "north0",
+      "center": [
+        2.0,
+        2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        2.0,
+        4.0
+      ]
+    },
+    {
+      "id": "north1_door",
+      "kind": "door",
+      "room": "north1",
+      "center": [
+        6.0,
+        2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        6.0,
+        4.0
+      ]
+    },
+    {
+      "id": "north2_door",
+      "kind": "door",
+      "room": "north2",
+      "center": [
+        10.2,
+        2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        10.0,
+        4.0
+      ]
+    },
+    {
+      "id": "south0_door",
+      "kind": "door",
+      "room": "south0",
+      "center": [
+        2.0,
+        -2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        2.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "south1_door",
+      "kind": "door",
+      "room": "south1",
+      "center": [
+        6.0,
+        -2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        6.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "south2_door",
+      "kind": "door",
+      "room": "south2",
+      "center": [
+        10.2,
+        -2.0
+      ],
+      "width": 1.2,
+      "yaw": 0,
+      "nav_point": [
+        10.0,
+        -4.0
+      ]
+    },
+    {
+      "id": "spawn",
+      "kind": "zone",
+      "label": "Movable obstacle spawn",
+      "center": [
+        6,
+        0
+      ],
+      "size": [
+        2,
+        1
+      ],
+      "yaw": 0
+    }
+  ]
+}

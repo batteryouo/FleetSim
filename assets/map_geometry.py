@@ -72,6 +72,6 @@ def expand(spec):
   points = {a['id'] for a in annotations if a['kind']=='point'}
   if any(a['room'] not in points for a in annotations if a['kind']=='door'):
     raise ValueError('Door room must reference a point annotation')
-  if not primitives:
+  if not primitives and not spec.get('obstacles'):
     raise ValueError('Map requires at least one primitive')
   return primitives, annotations

@@ -46,6 +46,23 @@ def compile_map(source: Path) -> dict:
     raise ValueError(f"{location}: {error.message}")
   from assets.map_geometry import expand
   primitives, annotations = expand(spec)
+  from assets.map_obstacles import expand_obstacles
+  catalog = {}
+  if "catalog" in spec:
+    try:
+      catalog = yaml.load((source.parent / spec["catalog"]).read_text(encoding="utf-8"), Loader=UniqueKeyLoader)
+    except yaml.YAMLError as error:
+      raise ValueError(f"Invalid catalog YAML: {error}") from error
+    _check_finite(catalog)
+    catalog_schema = {"$ref": "#/$defs/catalog", "$defs": schema["$defs"]}
+    error = next(Draft202012Validator(catalog_schema).iter_errors(catalog), None)
+    if error:
+      raise ValueError(f"Invalid catalog: {error.message}")
+  primitives.extend(expand_obstacles(spec, catalog))
+  annotations.extend(spec.get("spawn_regions", []))
+  ids = [item["id"] for item in primitives + annotations]
+  if len(ids) != len(set(ids)):
+    raise ValueError("Duplicate primitive or annotation id")
   result = {"version": 1, "id": spec["id"], "frame": "rep103", "primitives": primitives, "annotations": annotations}
   _check_finite(result)
   return result

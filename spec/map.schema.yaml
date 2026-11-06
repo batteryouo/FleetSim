@@ -32,6 +32,127 @@ properties:
       - $ref: '#/$defs/point_annotation'
       - $ref: '#/$defs/zone'
     minItems: 0
+  catalog:
+    type: string
+    minLength: 1
+  obstacles:
+    type: array
+    items:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          id: &id001
+            $ref: '#/$defs/identifier'
+          center: &id002
+            $ref: '#/$defs/point'
+          yaw: &id003
+            type: number
+          kind:
+            enum:
+            - static
+            - movable
+          lidar_transparent:
+            type: boolean
+          parts:
+            type: array
+            items:
+              $ref: '#/$defs/part'
+            minItems: 1
+        required:
+        - id
+        - center
+        - yaw
+        - kind
+        - lidar_transparent
+        - parts
+      - type: object
+        additionalProperties: false
+        properties:
+          id: *id001
+          center: *id002
+          yaw: *id003
+          catalog_id:
+            $ref: '#/$defs/identifier'
+        required:
+        - id
+        - center
+        - yaw
+        - catalog_id
+    minItems: 0
+  spawn_regions:
+    type: array
+    items:
+      $ref: '#/$defs/zone'
+    minItems: 0
+  validation:
+    type: object
+    additionalProperties: false
+    properties:
+      robot:
+        type: string
+        minLength: 1
+      clearance:
+        type: number
+        minimum: 0
+        default: 0.05
+      start:
+        $ref: '#/$defs/identifier'
+      targets:
+        type: array
+        items:
+          $ref: '#/$defs/identifier'
+        minItems: 1
+      bounds:
+        type: object
+        additionalProperties: false
+        properties:
+          center:
+            $ref: '#/$defs/point'
+          size:
+            $ref: '#/$defs/size'
+          yaw: *id003
+        required:
+        - center
+        - size
+        - yaw
+    required:
+    - robot
+    - start
+    - targets
+    - bounds
+  reference:
+    type: object
+    additionalProperties: false
+    properties:
+      source:
+        type: string
+        minLength: 1
+      meters_per_unit:
+        type: number
+        exclusiveMinimum: 0
+      unit:
+        enum:
+        - pixel
+        - pdf_point
+      origin:
+        $ref: '#/$defs/point'
+      yaw: *id003
+      status:
+        enum:
+        - provisional
+        - derived
+        - measured
+      source_note:
+        type: string
+        minLength: 1
+    required:
+    - meters_per_unit
+    - unit
+    - origin
+    - yaw
+    - status
+    - source_note
 $schema: https://json-schema.org/draft/2020-12/schema
 title: Cadence map spec v1
 $defs:
@@ -40,13 +161,13 @@ $defs:
     pattern: ^[A-Za-z][A-Za-z0-9_]*$
   point:
     type: array
-    items: &id001
+    items: &id004
       type: number
     minItems: 2
     maxItems: 2
   size:
     type: array
-    items: &id002
+    items: &id005
       type: number
       exclusiveMinimum: 0
     minItems: 2
@@ -68,9 +189,9 @@ $defs:
         $ref: '#/$defs/point'
       size:
         $ref: '#/$defs/size'
-      yaw: *id001
-      z_min: *id001
-      z_max: *id001
+      yaw: *id004
+      z_min: *id004
+      z_max: *id004
   door:
     type: object
     additionalProperties: false
@@ -88,11 +209,11 @@ $defs:
         $ref: '#/$defs/identifier'
       wall:
         $ref: '#/$defs/identifier'
-      offset: *id001
-      width: *id002
+      offset: *id004
+      width: *id005
       nav_point:
         $ref: '#/$defs/point'
-      minimum_end_distance: *id002
+      minimum_end_distance: *id005
   row:
     type: object
     additionalProperties: false
@@ -114,18 +235,18 @@ $defs:
         $ref: '#/$defs/identifier'
       origin:
         $ref: '#/$defs/point'
-      yaw: *id001
+      yaw: *id004
       side:
         enum:
         - left
         - right
-      room_width: *id002
-      depth: *id002
-      door_width: *id002
-      door_offset: *id001
-      wall_thickness: *id002
-      z_min: *id001
-      z_max: *id001
+      room_width: *id005
+      depth: *id005
+      door_width: *id005
+      door_offset: *id004
+      wall_thickness: *id005
+      z_min: *id004
+      z_max: *id004
       rooms:
         type: array
         items:
@@ -141,10 +262,10 @@ $defs:
               additionalProperties: false
               required: []
               properties:
-                room_width: *id002
-                depth: *id002
-                door_width: *id002
-                door_offset: *id001
+                room_width: *id005
+                depth: *id005
+                door_width: *id005
+                door_offset: *id004
         minItems: 1
   point_annotation:
     type: object
@@ -189,4 +310,60 @@ $defs:
         $ref: '#/$defs/point'
       size:
         $ref: '#/$defs/size'
-      yaw: *id001
+      yaw: *id004
+  part:
+    type: object
+    additionalProperties: false
+    properties:
+      center:
+        $ref: '#/$defs/point'
+      size:
+        $ref: '#/$defs/size'
+      yaw: *id003
+      z_min: *id003
+      z_max: *id003
+      estimated:
+        type: boolean
+    required:
+    - center
+    - size
+    - yaw
+    - z_min
+    - z_max
+    - estimated
+  catalog_entry:
+    type: object
+    additionalProperties: false
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      kind:
+        enum:
+        - static
+        - movable
+      lidar_transparent:
+        type: boolean
+      parts:
+        type: array
+        items:
+          $ref: '#/$defs/part'
+        minItems: 1
+    required:
+    - id
+    - kind
+    - lidar_transparent
+    - parts
+  catalog:
+    type: object
+    additionalProperties: false
+    properties:
+      version:
+        const: 1
+      entries:
+        type: array
+        items:
+          $ref: '#/$defs/catalog_entry'
+        minItems: 1
+    required:
+    - version
+    - entries
