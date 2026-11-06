@@ -28,10 +28,12 @@ func load_map(path: String) -> Error:
   for primitive in data["primitives"]:
     var body := StaticBody3D.new()
     body.name = primitive["id"]
-    body.position = Frames.position_to_godot(primitive["center"])
+    var height := float(primitive["z_max"]) - float(primitive["z_min"])
+    var center := [primitive["center"][0], primitive["center"][1], float(primitive["z_min"]) + height / 2.0]
+    body.position = Frames.position_to_godot(center)
     body.rotation.y = Frames.yaw_to_godot(float(primitive["yaw"]))
     var shape := BoxShape3D.new()
-    shape.size = Frames.size_to_godot(primitive["size"])
+    shape.size = Frames.size_to_godot([primitive["size"][0], primitive["size"][1], height])
     var collision := CollisionShape3D.new()
     collision.shape = shape
     body.add_child(collision)
@@ -61,17 +63,21 @@ func _valid_map(data: Variant) -> bool:
     if not id is String or id.is_empty() or ids.has(id):
       return false
     ids[id] = true
-    if not _vector3_array(primitive.get("center")) or not _vector3_array(primitive.get("size")):
+    if not _vector2_array(primitive.get("center")) or not _vector2_array(primitive.get("size")):
       return false
     for dimension in primitive["size"]:
       if dimension <= 0:
         return false
     if not _finite_number(primitive.get("yaw")):
       return false
+    if not _finite_number(primitive.get("z_min")) or not _finite_number(primitive.get("z_max")):
+      return false
+    if primitive["z_max"] <= primitive["z_min"]:
+      return false
   return true
 
-func _vector3_array(value: Variant) -> bool:
-  if not value is Array or value.size() != 3:
+func _vector2_array(value: Variant) -> bool:
+  if not value is Array or value.size() != 2:
     return false
   for component in value:
     if not _finite_number(component):

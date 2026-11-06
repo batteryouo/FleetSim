@@ -45,10 +45,12 @@ JSON without source paths or timestamps. Missing files or invalid input produce 
 nonzero exit status. Derived geometry is never edited by hand.
 
 The compiled contract contains `version: 0`, `id`, `frame: "rep103"`, and
-`primitives`. Every primitive has `id`, `type: "box"`, `center: [x, y, z]`,
-`size: [length_x, length_y, height]`, and `yaw`. The center height is halfway
-between `z_min` and `z_max`. All dimensions and poses remain in REP-103;
-the compiler does not convert to Godot coordinates or embed reference files.
+`primitives`. Every primitive has `id`, `type: "box"`, `center: [x, y]`,
+`size: [length_x, length_y]`, `yaw`, `z_min`, and `z_max`. The footprint is
+two-dimensional. The height endpoints are copied directly from the source without
+arithmetic and are the authoritative vertical bounds; consumers must not reconstruct
+them from a derived center height or box height. All dimensions and poses remain
+in REP-103; the compiler does not convert to Godot coordinates or embed reference files.
 
 ## World loading
 
@@ -56,7 +58,10 @@ the compiler does not convert to Godot coordinates or embed reference files.
 before creating `StaticBody3D` walls with `BoxShape3D` collision geometry and matching
 box meshes. It loads one map per instance. A malformed file fails without building
 a partial map. Collision bodies use layer 1. The main scene loads the committed
-test map; tests explicitly pass the path of a freshly compiled map.
+test map; tests explicitly pass the path of a freshly compiled map. The loader
+requires two-component footprints, finite height endpoints, and `z_max > z_min`.
+It derives the 3D box height and center only when constructing collision and visual
+geometry. Those derived values do not replace the compiled height endpoints.
 
 The minimal loader uses GodotPhysics3D to validate height intervals and rotated
 geometry. The source and compiled contracts do not require this physics backend;
@@ -81,6 +86,10 @@ headlessly. Queries execute during a physics callback after the bodies have ente
 the physics world. Each hit must identify the correct wall and match its independent
 expected distance within 0.001 m. Any unexpected miss, hit, engine script error,
 timeout, or unavailable Godot binary fails the test.
+
+A separate headless contract test rejects missing, nonnumeric, zero-width, or
+reversed height intervals and three-component footprints. Each malformed primitive
+follows a valid primitive to verify that rejection leaves zero child bodies.
 
 Godot references: [headless command line](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html)
 and [physics ray queries](https://docs.godotengine.org/en/stable/tutorials/physics/ray-casting.html).

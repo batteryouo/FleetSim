@@ -28,13 +28,24 @@ class CompilerTests(unittest.TestCase):
     result = compile_map(SOURCE)
     self.assertEqual(result["frame"], "rep103")
     self.assertEqual(result["primitives"][0], {
-      "id": "north", "type": "box", "center": [1.0, 2.1, 1.25],
-      "size": [10.4, 0.2, 2.5], "yaw": 0.0,
+      "id": "north", "type": "box", "center": [1.0, 2.1],
+      "size": [10.4, 0.2], "yaw": 0.0, "z_min": 0.0, "z_max": 2.5,
     })
     rotated = result["primitives"][-1]
-    self.assertEqual(rotated["center"], [12.0, 4.0, 1.0])
-    self.assertAlmostEqual(rotated["size"][2], 1.2)
+    self.assertEqual(rotated["center"], [12.0, 4.0])
+    self.assertEqual(rotated["size"], [4.0, 0.2])
+    self.assertEqual(rotated["z_min"], 0.4)
+    self.assertEqual(rotated["z_max"], 1.6)
     self.assertEqual(rotated["yaw"], self.spec["walls"][-1]["yaw"])
+  def test_height_endpoints_survive_json_without_arithmetic(self):
+    for z_min, z_max in [(0.4, 1.6), (0.1, 0.3), (-0.4, 0.4), (1000.1, 1000.2)]:
+      with self.subTest(z_min=z_min, z_max=z_max):
+        self.spec["walls"][-1].update(z_min=z_min, z_max=z_max)
+        primitive = json.loads(json.dumps(self._compile(self.spec)))["primitives"][-1]
+        self.assertEqual(primitive["z_min"], z_min)
+        self.assertEqual(primitive["z_max"], z_max)
+        self.assertEqual(len(primitive["center"]), 2)
+        self.assertEqual(len(primitive["size"]), 2)
   def test_generated_map_matches_source(self):
     generated = ROOT / "sim" / "generated" / "test_room.json"
     self.assertEqual(json.loads(generated.read_text(encoding="utf-8")), compile_map(SOURCE))

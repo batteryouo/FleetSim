@@ -53,13 +53,14 @@ def compile_map(source: Path) -> dict:
     seen.add(wall["id"])
     if wall["z_max"] <= wall["z_min"]:
       raise ValueError(f"{wall['id']}: z_max must exceed z_min")
-    height = wall["z_max"] - wall["z_min"]
     primitives.append({
       "id": wall["id"],
       "type": "box",
-      "center": [*wall["center"], wall["z_min"] + height / 2],
-      "size": [*wall["size"], height],
+      "center": list(wall["center"]),
+      "size": list(wall["size"]),
       "yaw": wall["yaw"],
+      "z_min": wall["z_min"],
+      "z_max": wall["z_max"],
     })
   result = {"version": 0, "id": spec["id"], "frame": "rep103", "primitives": primitives}
   _check_finite(result)
