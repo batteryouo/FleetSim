@@ -214,10 +214,11 @@ tests. The integrator uses planar REP-103 state without robot nodes or physics b
 See `docs/native-build.md` for native build and loading requirements.
 See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
 compile and test commands. Milestone 3 stage 1 provides snapshot-driven Jolt 3D
-lidar queries through C++ GDExtension, with headless geometry, lifecycle, and repeatability tests and an exported-release
-throughput and peak-memory benchmark. The 2D query runtime is removed following
-confirmation of the selection in `docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and agent
-transport remain outside this implementation.
+lidar queries through C++ GDExtension, with headless geometry, lifecycle, and
+repeatability tests and an exported-release throughput and peak-memory benchmark.
+The 2D query runtime is removed following confirmation of the selection in
+`docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and
+agent transport remain outside this implementation.
 
 ## Open Questions
 

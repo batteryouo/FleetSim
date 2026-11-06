@@ -8,7 +8,10 @@ from tools.m3_fixtures import stress_map
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument("--baseline", type=Path, required=True)
+  parser.add_argument("--baseline", type=Path, required=True,
+                      help="GDScript Jolt export from b44e8f1; a missing "
+                           "lidar_implementation field means gdscript. "
+                           "Exports marked cpp_jolt are rejected as baselines.")
   parser.add_argument("--candidate", type=Path, required=True)
   parser.add_argument("--output", type=Path, required=True)
   args = parser.parse_args()
