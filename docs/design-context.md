@@ -15,7 +15,7 @@ If this document and the brief disagree, the brief wins for current requirements
 
 - The project targets multi-robot navigation research, and later multi-robot dispatch.
 - Gazebo felt too heavy when training with several robots. Likely causes (camera/GPU sensors, GUI, per-robot ROS stacks, topic and tf volume) were never profiled; the decision to build a lightweight simulator was made anyway, using a game-development approach.
-- Current scale is 2 to 5 robots on one machine. The design must allow moving agent computation to other processes or machines later.
+- The current validation scale is 2 to 5 robots on one machine; larger fleets are an explicit goal. The design must allow moving agent computation to other processes or machines later.
 
 ## Reasoning Behind Key Decisions
 
@@ -26,6 +26,12 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Only collision detection must be authoritative and central. Physics never needs to be distributed.
 - Swept checks between consecutive poses prevent missed collisions from coarse steps.
 - Error budget: at 0.5 to 1.2 m/s with up to 50 ms staleness, position error is at most about 5 cm, comparable to lidar noise. Synchronization precision is not a practical concern for slow indoor robots.
+
+### Distributed sensing is not distributed physics
+
+- Sensing (for example, a lidar scan) reads state and advances none. Any node holding a copy of the static map and a synchronized snapshot of dynamic state (poses, pedestrians, door states) can compute it, similar to game clients that replicate the world.
+- Authority does not move: the World still owns state, collision detection, and shared resources. Only the computation of a read-only query is relocated.
+- Two interface rules keep this option open at low cost: the lidar takes a state snapshot and a robot pose instead of reaching into World internals, and per-robot noise is derived from `(seed, robot_id, step)` so the result is identical wherever and in whatever order it is computed.
 
 ### Why collision is terminal and rollback is truncation
 
@@ -47,11 +53,14 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Therefore observations and actions must match the semantics of ROS LaserScan, Odometry, and Twist: scan angle range, angular resolution, range limits, rates, noise, velocity and acceleration limits, control rate, and latency.
 - Running Nav2 in the loop was rejected for now because it brings back the weight that motivated leaving Gazebo.
 
-### Planar state, 3D as a view
+### Planar state; backend decided by measurement
 
-- Lidar, differential drive, collision checks, and pedestrians are all planar problems. Godot 2D physics is the main performance lever.
-- Cameras are undecided. If needed, a 3D scene is rendered from the planar state; robots and pedestrians only have (x, y, yaw), so mirroring is straightforward.
-- This only breaks down for true 3D terrain (ramps, stairs), which is rare in indoor navigation.
+- Decided: robot and pedestrian state is planar, (x, y, yaw). Lidar, differential drive, collision checks, and pedestrians are all planar problems.
+- Open: the geometry and query backend. Milestones 1 through 3 use 3D physics provisionally; the Milestone 3 benchmark decides.
+- 2D backend advantages: likely cheaper broadphase and ray queries; height ranges can be resolved at compile time by assigning each primitive to the lidar layer and/or the body layer from its z interval.
+- 3D backend advantages: obstacle height ranges are handled naturally by casting rays at the lidar height; cameras, if needed, render from the same scene without a mirrored copy.
+- Either way, the compiled map carries explicit height ranges, so the map pipeline does not depend on the choice.
+- The planar state model only breaks down for true 3D terrain (ramps, stairs), which is rare in indoor navigation.
 
 ### Greybox first, Blender later
 
@@ -62,13 +71,13 @@ Games need authoritative servers, prediction, and rollback because players inter
 ### Map pipeline
 
 - Maps are authored in YAML and compiled by Python into primitive-only JSON, because Godot has no built-in YAML parser and because high-level constructs (room rows, catalog references) should be expanded in one place.
-- Every primitive carries a height range so the same compiled map can drive the 2D world and a future 3D view.
+- Every compiled primitive carries a 2D footprint plus explicit `z_min` and `z_max` copied verbatim from the source, so the same compiled map can drive a 2D or 3D backend. Heights are not reconstructed from a box center and size, because the floating-point round trip would shift boundaries that decide whether an obstacle intersects the lidar plane.
 - A Godot editor plugin may later provide visual editing with round-trip load and export. Specs remain authoritative. Free rectangles were chosen over TileMapLayer because real walls and doors have arbitrary metric sizes.
 
 ### Obstacles and the lidar plane
 
 - A 2D lidar only sees what intersects its scan plane. Every obstacle has a footprint and a height range (z_min, z_max).
-- Two collision layers: a lidar layer (objects intersecting the scan plane) and a body layer (objects intersecting the robot's height range).
+- With a 2D backend, this becomes two collision layers: a lidar layer (objects intersecting the scan plane) and a body layer (objects intersecting the robot's height range). With a 3D backend, rays at the lidar height and a body shape spanning the robot's height range give the same result.
 - Known hard cases from the reference site: wall handrails (about 0.7 to 0.9 m high, protruding about 0.08 to 0.10 m; usually invisible to the lidar but able to touch the body), IV poles (only thin wheeled legs at lidar height), carts and wheelchairs (hollow bases), and glass partitions (lidar may pass through or reflect; stored as `lidar_transparent`, effect not yet implemented).
 - Movable obstacles are placed randomly within spawn regions for domain randomization.
 
@@ -77,7 +86,12 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Start with GDScript everywhere: fast iteration, no compile step, and most code is not a bottleneck.
 - Isolate hot paths behind stable interfaces: lidar batch queries, swept collision checks, and batched kinematics integration.
 - The main risk is call overhead (for example, 5 robots times 360 beams is 1800 engine calls per step), not GDScript arithmetic.
-- Add a throughput benchmark at Milestone 3. Only if it misses its target, rewrite the hot paths as a C++ GDExtension. Since walls are rectangles, analytic ray-segment intersection outside the physics engine is another option.
+- The Milestone 3 benchmark (specified in the brief) decides the backend and whether a GDExtension is needed.
+- The target is aggregate throughput across parallel World instances, not single-instance speed. Training environments are independent and need no synchronization, so running several instances is the cheapest way to scale. Cores used by the Python side must be reserved when counting.
+- Rough estimate, to be confirmed by measurement: per-ray engine calls from GDScript cost a few microseconds each, so 1,800 rays per step limits one instance to roughly 100 to 300 steps/s. Parallel instances may still reach the target without C++.
+- Analytic ray-rectangle intersection is only competitive with a spatial index and native code; in GDScript the loop itself would be too slow. It therefore belongs to the GDExtension stage, not to the first comparison.
+- Measurements use the release build used for training; the editor binary is a debug build and runs GDScript slower.
+- Stage 1 compares only the query kernel on both backends, to avoid implementing every feature twice.
 - C# was considered but adds a .NET dependency.
 
 ## Reference Site: Ward 73
@@ -92,20 +106,20 @@ Games need authoritative servers, prediction, and rollback because players inter
 
 ## Current Status
 
-- Codex is implementing Milestone 1 only: scaffold, map spec v0, compiler, minimal Godot world loader, and a headless ray-distance test.
-- Decisions sent to Codex for this round:
-  - References are under `tmp/`, not `tmp/references/`.
-  - `docs/` must be tracked; `.gitignore` must be tracked; `tmp/` stays ignored.
-  - `sims/` is renamed to `sim/` if it holds nothing worth keeping.
-  - Commit locally after tests pass; never push.
-- Next round (approved, not started): Ward 73 map using map spec v1 (walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions), scale calibration, obstacle catalog, overlay preview under `tmp/`, and a connectivity test (robot radius 0.3 m, every room door reachable from the nurse station).
+- Milestone 1 is complete: map spec v0, the YAML-to-JSON compiler, the minimal Godot loader (GodotPhysics3D), headless ray-distance tests, and loader rejection tests.
+- Milestone 2 is complete: robot spec v0 for the A100 (circle footprint radius 0.27 m), its compiler, and batched float64 differential-drive kinematics with headless tests. See `docs/robot-spec.md`.
+- Commits are local and not pushed.
+- References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
+- Next: Milestone 3 (lidar and throughput benchmark).
+- After Milestone 3: the Ward 73 round, possibly split into (a) map spec v1 on a synthetic map and (b) tracing Ward 73 after scale calibration. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a connectivity test (robot radius 0.3 m, every room door reachable from the nurse station).
 
 ## Open Questions
 
-- Robot platform details; a URDF exists but is not in the repository yet. Maximum velocity and acceleration must come from controller parameters, not the URDF.
-- Lidar mounting height and specifications.
+- Robot platform details: the A100 URDF and Gazebo xacro files are local references under `tmp/`, not tracked. Footprint and lidar mounting pose come from the URDF. Velocity limits are a chosen simulation action range ([-1, 1] m/s and rad/s, reverse allowed); deployment narrows actions on the inference side if the real robot needs it, so the simulator need not match the controller. Acceleration limits must come from controller parameters, not the URDF; the current values are provisional, derived from Gazebo plugin settings.
+- Lidar model, needed for scan parameters (beam count, angle range, range limits).
+- Benchmark decision rule: which backend to choose if both meet the target, and what to do if neither does.
 - Whether cameras will be used.
 - Policy network design (does not block the environment).
-- Transport and serialization, step rate, and sensor rates.
+- Transport and serialization, control rate, and lidar rate.
 - Whether collision terminates only the involved robots or the whole episode.
 - A measured real dimension to replace the provisional map scale.
