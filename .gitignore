@@ -1,0 +1,36 @@
+# Python-generated files
+__pycache__/
+.pytest_cache/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+tmp/
+
+# Virtual environments
+.venv
+.claude/
+.agents/
+.codex/
+CLAUDE.md
+AGENTS.md
+
+# editor setting
+.vscode/
+.vs/
+
+# Godot editor cache
+sim/.godot/
+
+# C/C++ build artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+*.o
+*.obj
+*.pdb
+*.exe
+*.ilk

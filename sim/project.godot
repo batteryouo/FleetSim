@@ -1,0 +1,12 @@
+config_version=5
+
+[application]
+config/name="Cadence"
+run/main_scene="res://world/world.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[physics]
+3d/physics_engine="GodotPhysics3D"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world/map_loader.gd" id="1"]
+
+[node name="World" type="Node3D"]
+script = ExtResource("1")
+map_path = "res://generated/test_room.json"
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(-2, 18, -5)
+rotation = Vector3(-1.5707963, 0, 0)
+projection = 1
+size = 22.0
+current = true
+
+[node name="Light" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-1.0471976, -0.5235988, 0)
