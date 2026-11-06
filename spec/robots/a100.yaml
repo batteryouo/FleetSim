@@ -1,0 +1,15 @@
+version: 0
+id: a100
+footprint:
+  type: circle
+  radius: 0.27
+body:
+  z_min: 0.0
+  z_max: 0.25
+min_linear_velocity: -1.0
+max_linear_velocity: 1.0
+min_angular_velocity: -1.0
+max_angular_velocity: 1.0
+max_linear_acceleration: 2.0
+max_angular_acceleration: 10.0
+provisional: [max_linear_acceleration, max_angular_acceleration]

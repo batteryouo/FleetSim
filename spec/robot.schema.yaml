@@ -1,0 +1,61 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Cadence robot spec v0
+type: object
+additionalProperties: false
+required:
+  - version
+  - id
+  - footprint
+  - body
+  - min_linear_velocity
+  - max_linear_velocity
+  - min_angular_velocity
+  - max_angular_velocity
+  - max_linear_acceleration
+  - max_angular_acceleration
+  - provisional
+properties:
+  version:
+    type: integer
+    const: 0
+  id:
+    type: string
+    pattern: '^[A-Za-z][A-Za-z0-9_]*$'
+  footprint:
+    type: object
+    additionalProperties: false
+    required: [type, radius]
+    properties:
+      type:
+        const: circle
+      radius:
+        type: number
+        exclusiveMinimum: 0
+  body:
+    type: object
+    additionalProperties: false
+    required: [z_min, z_max]
+    properties:
+      z_min:
+        type: number
+      z_max:
+        type: number
+  min_linear_velocity:
+    type: number
+  max_linear_velocity:
+    type: number
+  min_angular_velocity:
+    type: number
+  max_angular_velocity:
+    type: number
+  max_linear_acceleration:
+    type: number
+    exclusiveMinimum: 0
+  max_angular_acceleration:
+    type: number
+    exclusiveMinimum: 0
+  provisional:
+    type: array
+    uniqueItems: true
+    items:
+      type: string

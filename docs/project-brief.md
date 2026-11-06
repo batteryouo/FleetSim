@@ -154,8 +154,13 @@ The World should support saving viewport screenshots in headless mode, so result
 
 Milestone 1 provides rectangular walls in map spec v0, an engine-independent JSON
 compiler, a minimal Godot loader, and headless physics ray-distance acceptance tests.
-See `docs/map-spec.md` for the contracts and `README.md` for compile and test commands.
-Ward 73, robot motion, lidar, and agent transport are outside this implementation.
+Milestone 2 adds robot spec v0, its JSON compiler, and batched float64 differential-drive
+kinematics with configurable dt, explicit velocity and acceleration limits, and
+headless acceptance tests. The integrator uses planar REP-103 state without robot
+nodes or physics bodies.
+See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
+compile and test commands. Ward 73, lidar, robot collision handling, noise, and agent
+transport are outside this implementation.
 
 ## Open Questions
 
