@@ -102,8 +102,8 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Target area: Ward 73 on the 7th floor of a hospital, based on a floor plan and site photos.
 - The goal is the layout logic, not an exact replica: corridor topology, widths, room rows, door positions, nurse station area, and elevator/stair core.
 - References live in `tmp/` (ignored by Git). They include a hospital floor plan and photos showing staff, so they must never be committed.
-- The PDF is vector but flattened: about 25,000 lines and 19,000 curves, uniform line width, no layers. Automatic wall extraction is unreliable, so walls are traced or described parametrically.
-- The printed scale (S=1/200) is invalid because the drawing was shrunk to A4. Scale is estimated from labeled room areas as a provisional value until a real dimension is measured.
+- When a source plan retains per-object layer markers, filtering them can yield clean walls and make a tracked extraction tool viable.
+- The printed scale label on a reduced copy is invalid. A working scale is derived from the reduction ratio and recorded locally with a status of provisional, derived, or measured.
 - Repetitive patient-room rows use parametric `room_rows`; irregular areas use plain walls.
 - Annotations (room IDs, nurse station, elevators) carry a separate reachable `nav_point` for later navigation goals and dispatch tasks.
 
@@ -115,7 +115,7 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Commits are local and not pushed.
 - References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
 - Milestone 3 stage 1 provides the confirmed Jolt 3D snapshot-driven lidar kernel through C++ GDExtension, headless geometry/lifecycle/repeatability tests, and an exported-release benchmark. The 2D runtime is removed; `docs/benchmark-m3.md` preserves the historical comparison and decision rule. `docs/benchmark-native-lidar.md` records the GDScript/C++ comparison. No stage 2, noise, collision response, or Python bridge is implemented.
-- After Milestone 3: the Ward 73 round, possibly split into (a) map spec v1 on a synthetic map and (b) tracing Ward 73 after scale calibration. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a connectivity test (robot radius 0.3 m, every room door reachable from the nurse station).
+- After Milestone 3: the map round is split into (a) map spec v1 on a synthetic map and (b) source-plan extraction using a locally recorded working scale; physical measurement upgrades the scale status rather than unblocking the work. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a configuration-space connectivity test using the robot spec radius and body height plus named clearance, with all target nav_points reachable from the start annotation.
 
 ## Open Questions
 
@@ -125,4 +125,4 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Policy network design (does not block the environment).
 - Transport and serialization, control rate, and lidar rate.
 - Whether collision terminates only the involved robots or the whole episode.
-- A measured real dimension to replace the provisional map scale.
+- A physical measurement to upgrade the locally recorded scale status; a derived working scale allows source-plan work to proceed.

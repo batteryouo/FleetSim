@@ -52,6 +52,25 @@ $env:GODOT_BIN = 'C:\path\to\Godot_v4.7.1-stable_win64_console.exe'
 On other machines, set `GODOT_BIN` to the local executable or put `godot` / `godot4`
 on `PATH`. Tests fail if Godot is unavailable; they do not skip the acceptance test.
 
+## Map v1 compile, validate, and preview
+
+Install requirements.txt, which pins Shapely 2.1.2 for validation tooling only.
+The map compiler does not import Shapely. The Arch validation record must be
+rerun with the expanded map suite and this new dependency.
+
+```powershell
+python -m assets.build spec/maps/synthetic_ward.yaml
+python -m tools.validate_map spec/maps/synthetic_ward.yaml
+python -m pip install matplotlib==3.8.2
+python -m tools.preview_map spec/maps/synthetic_ward.yaml --output tmp/synthetic_ward.png
+```
+
+Matplotlib is needed only for PNG previews. Missing local reference images are
+reported and skipped; compile and validation do not depend on them. The synthetic
+map exercises rows, subtractive doors, compound obstacles, annotation kinds,
+spawn zones, and spec-derived configuration-space validation. See
+[map spec v1](docs/map-spec.md) for defaults and the clear-width definition.
+
 ## Compile and test
 
 Run these commands from the repository root:
@@ -125,7 +144,7 @@ world with a simple overhead camera:
 The overhead scene displays the Milestone 1 map. Milestone 2 provides the headless
 kinematics API without adding robot visual nodes.
 
-See [map spec v0](docs/map-spec.md) and [robot spec v0](docs/robot-spec.md) for the
+See [map spec v1](docs/map-spec.md) and [robot spec v0](docs/robot-spec.md) for the
 source and compiled contracts and
 [project brief](docs/project-brief.md) for architecture and later milestones.
 Local references and previews belong under ignored `tmp/`; never copy or commit
