@@ -1,4 +1,4 @@
-# Native kinematics build
+# Native simulation kernels build
 
 ## Scope
 
@@ -13,6 +13,15 @@ Its `advance(...)` arguments, output dictionary, command order, dt handling, err
 behavior, and input immutability follow `docs/robot-spec.md`. The script contains
 no motion calculations or numerical fallback. Loading is explicit, so tests do
 not require opening the editor to create `.godot/extension_list.cfg` first.
+
+`native/src/godot_lidar.cpp` implements `CadenceLidar`, a stateful RefCounted
+service per query space. It uses Godot PhysicsServer3D and Jolt for ray queries;
+proxy updates, beam loops, and scan assembly execute in C++. The public GDScript
+adapter preserves the lidar interface in `docs/robot-spec.md`. Explicit close
+and native destruction release RIDs and shape references. The coordinate basis
+is supplied by `sim/bridge/frames.gd` and applied by `sim/bridge/native_frames.hpp`;
+the native code does not define another axis mapping. Both classes share the existing `cadence_kinematics` library name
+and descriptor, so build commands and deployment paths stay unchanged.
 
 ## Dependencies and compatibility
 
@@ -52,8 +61,9 @@ older minor APIs on newer engines. See the official
 The bindings use `GODOTCPP_PRECISION=single` for the standard engine's `real_t`
 ABI. Robot state still uses `double` and `PackedFloat64Array` throughout. A
 double-precision custom engine requires matching binding settings and separate
-validation. The binding profile keeps RefCounted and its dependencies; OS is
-also included because godot-cpp's internal verbose logging requires it.
+validation. The binding profile includes RefCounted, the 3D physics query and shape classes,
+and their dependencies. OS is also included because godot-cpp's internal verbose
+logging requires it.
 
 ## Build on Windows
 
@@ -157,6 +167,9 @@ requires successful native execution; another omits the library and requires a
 nonzero exit with a build instruction. Invalid buffer lengths, non-finite values,
 and invalid motion limits are also tested at the native boundary.
 
-This migration establishes a native build and integration path. It makes no
-performance claim and does not decide the Milestone 3 lidar backend. The M3
-benchmark and its acceptance criteria remain separate work.
+The C++ lidar is validated on Windows only; the recorded Arch run covers M1/M2,
+not the expanded physics bindings. Rebuild and rerun the full suite on each target.
+The lidar tests verify native registration, loading without caches, rejection of
+a missing library, geometry, snapshot updates, and resource lifecycle. The Windows
+build passes all 55 tests. See `docs/benchmark-native-lidar.md` for a focused release
+comparison; the historical 2D/Jolt selection remains in `docs/benchmark-m3.md`.

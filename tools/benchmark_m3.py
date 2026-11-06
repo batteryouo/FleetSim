@@ -82,7 +82,7 @@ def export_project(godot, output, release_template):
   if not executable.exists():
     raise RuntimeError("Release export did not produce an executable")
   return executable
-def run_group(executable, output, label, backend, count, beams, instances, seconds):
+def run_group(executable, output, label, backend, count, beams, instances, seconds, implementation="cpp_jolt"):
   if backend not in RUN_BACKENDS:
     raise ValueError("Only the selected Jolt backend is available")
   directory = output / label
@@ -120,7 +120,8 @@ def run_group(executable, output, label, backend, count, beams, instances, secon
       result["steps_per_second"] = result["steps"] / result["elapsed_seconds"]
       result["wall_steps_per_second"] = result["steps"] / result["wall_seconds"]
       result["rays_per_second"] = result["steps_per_second"] * count * beams
-      if not result["release"] or result["editor"] or not result["native"] or result["scans"] != count or result["checksum"] <= 0:
+      if (not result["release"] or result["editor"] or not result["native"]
+          or result.get("lidar_implementation", "gdscript") != implementation or result["scans"] != count or result["checksum"] <= 0):
         raise RuntimeError(f"Invalid benchmark workload: {result}")
       results.append(result)
       Path(config["ack"]).write_text("ack", encoding="utf-8")

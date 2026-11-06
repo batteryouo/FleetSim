@@ -17,9 +17,11 @@ FetchContent_MakeAvailable(godot_cpp)
 add_library(cadence_kinematics SHARED
   src/kinematics.cpp
   src/godot_kinematics.cpp
+  src/godot_lidar.cpp
   src/register_types.cpp
 )
 target_link_libraries(cadence_kinematics PRIVATE godot::cpp)
+target_include_directories(cadence_kinematics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../sim/bridge")
 target_compile_features(cadence_kinematics PRIVATE cxx_std_17)
 if(MSVC)
   target_compile_options(cadence_kinematics PRIVATE /W4 /fp:strict)

@@ -14,6 +14,8 @@ func _run() -> void:
     if kernel.configure(test_case["map"], test_case["robot"]) != OK:
       _fail("configure failed")
       continue
+    if not ClassDB.class_exists("CadenceLidar") or not GDExtensionManager.is_extension_loaded(Lidar.EXTENSION_PATH):
+      _fail("Native lidar extension is not loaded")
     await physics_frame
     var scans: Array[Dictionary] = []
     for snapshot in test_case["snapshots"]:
@@ -47,6 +49,7 @@ func _run() -> void:
           _fail("Stress ray differs from independent geometry expectation")
     kernel.close()
   if failures == 0:
+    print("NATIVE_LIDAR: CadenceLidar")
     print("MILESTONE_3_PASS: %d cases" % fixture["cases"].size())
   quit(0 if failures == 0 else 1)
 

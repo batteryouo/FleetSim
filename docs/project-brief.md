@@ -24,7 +24,7 @@ The project takes a game-development approach: scenes are generated from data, G
 - **Blender** (Python `bpy`, run headless): generates visual assets from specs and exports glTF.
 - **Godot 4** (run headless for training): World simulation, sensing, pedestrians, collision checks.
 - **Python**: bridge client, environment wrappers, training code.
-- **C++17 / GDExtension**: batched differential-drive kinematics with a thin GDScript entry point.
+- **C++17 / GDExtension**: batched differential-drive kinematics and Jolt lidar queries with thin GDScript entry points.
 - **CMake and pinned godot-cpp**: build the native extension against the pinned Godot API bindings.
 
 Milestones 1 and 2 are validated in these environments, using standard Godot
@@ -43,7 +43,8 @@ and remains unpinned.
 
 Jolt 3D is the confirmed geometry and query backend, selected explicitly in
 `sim/project.godot` after the Milestone 3 comparison. Robot state remains planar;
-lidar uses GDScript engine queries and kinematics remains in C++.
+lidar queries and kinematics run in C++; Jolt still computes ray intersections.
+This language migration is separate from the stage 2 analytic lidar option.
 
 ## Architecture
 
@@ -213,7 +214,7 @@ tests. The integrator uses planar REP-103 state without robot nodes or physics b
 See `docs/native-build.md` for native build and loading requirements.
 See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
 compile and test commands. Milestone 3 stage 1 provides snapshot-driven Jolt 3D
-lidar queries, with headless geometry and repeatability tests and an exported-release
+lidar queries through C++ GDExtension, with headless geometry, lifecycle, and repeatability tests and an exported-release
 throughput and peak-memory benchmark. The 2D query runtime is removed following
 confirmation of the selection in `docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and agent
 transport remain outside this implementation.

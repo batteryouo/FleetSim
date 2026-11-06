@@ -79,6 +79,12 @@ class Milestone3Tests(unittest.TestCase):
     if expected_status == 0:
       self.assertNotIn("ERROR:", transcript)
       self.assertIn(f"MILESTONE_3_PASS: {len(cases)} cases", transcript)
+      self.assertIn("NATIVE_LIDAR: CadenceLidar", transcript)
+  def test_rotated_wall_and_transformed_scan_origin(self):
+    yaw = math.pi / 6
+    c, s = math.cos(yaw), math.sin(yaw)
+    self._run([self._case("rotated_wall", [wall("rotated", 5 * c, 5 * s, .2, 10, yaw=yaw)],
+                          [0, 0, yaw], [["+inf", 4.7, "+inf"]])])
   def test_corridor_angle_order_count_rotation_and_mount(self):
     corridor = [wall("left", 0, 2.1, 60, 0.2), wall("right", 0, -2.1, 60, 0.2)]
     self._run([
@@ -131,3 +137,12 @@ class Milestone3Tests(unittest.TestCase):
     self._run(cases)
   def test_failed_expectation_exits_nonzero(self):
     self._run([self._case("deliberately_wrong", [], [0, 0, 0], [[1, 1, 1]])], expected_status=1)
+  def test_native_boundary_and_resource_lifecycle(self):
+    result = subprocess.run([self.godot, "--headless", "--path", str(ROOT / "sim"),
+                             "--log-file", str(self.directory / "lifecycle.log"), "--script",
+                             "res://tests/lidar_lifecycle_test.gd"], capture_output=True, text=True, timeout=60)
+    transcript = result.stdout + result.stderr
+    self.assertEqual(result.returncode, 0, transcript)
+    self.assertNotIn("SCRIPT ERROR", transcript)
+    self.assertNotIn("leaked", transcript.lower())
+    self.assertIn("NATIVE_LIDAR_LIFECYCLE_PASS", transcript)

@@ -207,13 +207,15 @@ outside the implementation.
 
 ## Batched lidar queries (Milestone 3 stage 1)
 
-`sim/sensors/lidar_kernel.gd` owns an independent query space. Call
+`sim/sensors/lidar_kernel.gd` is a thin adapter to the native `CadenceLidar`
+RefCounted service. Each instance owns an independent Jolt query space. Call
 `configure(compiled_map, compiled_robot)`, then `scan_batch(snapshot)`. The kernel
 requires Jolt Physics in project settings. Configuration accepts validated compiler
 outputs; snapshots contain `ids` (unique string array), `poses`
 (`PackedFloat64Array` with the same 3N layout as kinematics), and `robot_spec`
 (the configuration used to create the space). An empty batch returns no scans.
-Call `close()` to release server RIDs before dropping the kernel. Reconfiguration
+Call `close()` to release server RIDs before dropping the kernel; the native
+destructor also releases them if the caller drops the last reference. Reconfiguration
 also releases the old space. Call from the physics-safe execution context of the
 owning Godot runtime; no World node or shared process state is accessed.
 
@@ -223,7 +225,10 @@ have collision mask zero: they do not integrate motion or resolve contacts.
 Jolt uses 3D boxes and horizontal rays at the mount z. Other robots use cylinders
 with their true footprint radius and body height interval. Each ray query
 explicitly excludes its own body's RID. Jolt shape margins are zero so proxy
-geometry matches the specified dimensions. Coordinate conversion stays in `sim/bridge/frames.gd`; authoritative state stays float64 REP-103.
+geometry matches the specified dimensions. The axis mapping is defined only in `sim/bridge/frames.gd`; its
+`basis_to_godot()` supplies the conversion basis to the C++ helpers in
+`sim/bridge/native_frames.hpp`. All frame conversions stay in that interface
+layer; authoritative state stays float64 REP-103.
 Engine query vectors use the standard engine's single precision, so range
 comparisons use tolerances; storing results in float64 does not recover that precision.
 
@@ -258,3 +263,17 @@ stress-map checks against independent box/circle intersections (1e-4 m tolerance
 Repeated snapshots must return bit-identical range arrays. See
 `docs/benchmark-m3.md` for the historical comparison that selected Jolt 3D;
 README documents the current Jolt-only release benchmark.
+
+The native implementation updates proxies, computes beam endpoints, calls Jolt,
+and assembles scans. Jolt still owns spatial indexing and intersection; this is
+not the stage 2 analytic ray kernel. Configuration accepts validated compiler
+outputs and checks the numeric fields used by the native code before creating
+geometry. Invalid snapshots return an empty array without changing proxies;
+failed reconfiguration closes the previous space. Scanning after close fails.
+Build the shared extension before use; there is no script fallback.
+
+Tests require `CadenceLidar` registration and cover loading without editor caches,
+a missing library, rotated walls, empty batches, invalid native inputs, repeated
+configuration/close, independent instances, and destruction without explicit close.
+C++ and GDScript scan results use the same geometric tolerances; cross-language
+or cross-platform bit identity is not promised.

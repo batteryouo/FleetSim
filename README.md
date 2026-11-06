@@ -4,7 +4,7 @@ Cadence is a lightweight multi-robot simulation project. Milestone 1 provides a
 YAML map compiler, a minimal Godot world, and headless physics ray-distance checks.
 Milestone 2 adds a robot spec compiler and batched float64 differential-drive
 kinematics implemented in a C++ GDExtension. Milestone 3 stage 1 adds batched lidar
-queries using the selected Jolt 3D backend and an exported-release benchmark.
+queries implemented in the C++ GDExtension using Jolt 3D, with an exported-release benchmark.
 Robot collision handling, noise, agent transport, and Ward 73 modeling remain later work.
 
 ## Setup
@@ -17,7 +17,7 @@ Validated environments use standard Godot `4.7.1.stable.official.a13da4feb`:
 | Arch Linux x86_64 | 3.11.16 | 4.4.4 | GCC 16.2.1 | 2.44 |
 
 Both environments passed the 37-test M1/M2 suite; the Arch run validated commit `6ca0d76`.
-The M3 release benchmark and expanded lidar suite are validated on Windows only.
+The M3 release benchmark and C++ lidar suite are validated on Windows only.
 See [Linux build and validation](docs/native-build.md#build-on-arch-linux) for
 the exact Linux commands and [binary portability](docs/native-build.md#linux-binary-portability)
 for target ABI requirements. macOS remains unvalidated.
@@ -70,7 +70,7 @@ into real Godot physics before checking 13 rays with a 1 mm distance tolerance.
 The robot compiler writes `sim/generated/robots/a100.json`. Milestone 2 tests compile
 fresh robot configurations and run headless motion checks, including the 1 m/s for
 2 s acceptance case, acceleration ramps, and bit-identical batch/single execution.
-The tests require the C++ extension and check that its native class is loaded;
+Both kinematics and lidar require the C++ extension; tests check that their native classes are loaded;
 there is no script fallback. Isolated loader tests cover a fresh project without
 editor import caches and a missing DLL.
 
@@ -104,7 +104,8 @@ claiming a throughput qualification. Full runs use five repeats, all robot/beam 
 and parallel instances through the physical-core count. Raw results stay under
 `tmp/`. See [M3 benchmark](docs/benchmark-m3.md) for exact commands, measurement
 scope, historical comparison results, and the decision rule. Jolt 3D is confirmed;
-the 2D runtime has been removed. New runs measure Jolt only and report `target_met`
+the 2D runtime has been removed. See [native lidar comparison](docs/benchmark-native-lidar.md)
+for the GDScript/C++ release comparison and reproduction commands. New runs measure Jolt only and report `target_met`
 for full runs. `tools.report_m3` renders archived two-backend results only.
 
 To run only the headless ray check against the generated map:

@@ -74,7 +74,8 @@ func _physics_process(_delta: float) -> void:
     "wall_seconds": (Time.get_ticks_usec() - start) / 1000000.0,
     "release": not OS.is_debug_build(), "editor": OS.has_feature("editor"),
     "godot": Engine.get_version_info()["string"], "scans": scans.size(),
-    "native": ClassDB.class_exists("CadenceKinematics"), "checksum": 0.0}
+    "native": ClassDB.class_exists("CadenceKinematics"),
+    "lidar_implementation": "cpp_jolt" if ClassDB.class_exists("CadenceLidar") else "unavailable", "checksum": 0.0}
   for scan in scans:
     for distance in scan["ranges"]:
       if is_finite(distance):
