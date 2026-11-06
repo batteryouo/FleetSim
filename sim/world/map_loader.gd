@@ -4,6 +4,7 @@ const Frames = preload("res://bridge/frames.gd")
 const WALL_LAYER := 1
 @export var map_path: String = ""
 var _map_loaded := false
+var _annotations: Array = []
 var _id_pattern := RegEx.create_from_string("^[A-Za-z][A-Za-z0-9_]*$")
 
 func _ready() -> void:
@@ -26,7 +27,7 @@ func load_map(path: String) -> Error:
     return ERR_PARSE_ERROR
   var data = parser.data
   if not _valid_map(data):
-    push_error("Expected a compiled v0 REP-103 map containing box primitives")
+    push_error("Expected a compiled v1 REP-103 map with box primitives and valid annotations")
     return ERR_INVALID_DATA
   for primitive in data["primitives"]:
     var body := StaticBody3D.new()
@@ -47,13 +48,14 @@ func load_map(path: String) -> Error:
     visual.mesh = mesh
     body.add_child(visual)
     add_child(body)
+  _annotations = data["annotations"].duplicate(true)
   _map_loaded = true
   return OK
 
 func _valid_map(data: Variant) -> bool:
   if not data is Dictionary:
     return false
-  if data.get("version") != 0 or data.get("frame") != "rep103":
+  if data.get("version") != 1 or data.get("frame") != "rep103":
     return false
   if not data.get("id") is String or not data.get("primitives") is Array:
     return false
@@ -78,7 +80,47 @@ func _valid_map(data: Variant) -> bool:
       return false
     if primitive["z_max"] <= primitive["z_min"]:
       return false
+  if not data.get("annotations") is Array:
+    return false
+  var rooms := {}
+  for annotation in data["annotations"]:
+    if not _valid_annotation(annotation) or ids.has(annotation["id"]):
+      return false
+    ids[annotation["id"]] = true
+    if annotation["kind"] == "point":
+      rooms[annotation["id"]] = true
+  for annotation in data["annotations"]:
+    if annotation["kind"] == "door" and not rooms.has(annotation["room"]):
+      return false
   return true
+
+func get_annotations() -> Array:
+  return _annotations.duplicate(true)
+
+func _valid_annotation(value: Variant) -> bool:
+  if not value is Dictionary or not value.get("id") is String or _id_pattern.search(value["id"]) == null:
+    return false
+  var keys: Array
+  match value.get("kind"):
+    "point":
+      keys = ["id", "kind", "label", "point", "nav_point"]
+      if not value.get("label") is String or value["label"].is_empty() or not _vector2_array(value.get("point")) or not _vector2_array(value.get("nav_point")):
+        return false
+    "door":
+      keys = ["id", "kind", "room", "center", "width", "yaw", "nav_point"]
+      if not value.get("room") is String or _id_pattern.search(value["room"]) == null or not _vector2_array(value.get("center")) or not _vector2_array(value.get("nav_point")):
+        return false
+      if not _finite_number(value.get("width")) or value["width"] <= 0 or not _finite_number(value.get("yaw")):
+        return false
+    "zone":
+      keys = ["id", "kind", "label", "center", "size", "yaw"]
+      if not value.get("label") is String or value["label"].is_empty() or not _vector2_array(value.get("center")) or not _vector2_array(value.get("size")):
+        return false
+      if value["size"][0] <= 0 or value["size"][1] <= 0 or not _finite_number(value.get("yaw")):
+        return false
+    _:
+      return false
+  return value.size() == keys.size()
 
 func _vector2_array(value: Variant) -> bool:
   if not value is Array or value.size() != 2:

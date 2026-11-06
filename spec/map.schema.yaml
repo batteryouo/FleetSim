@@ -1,46 +1,192 @@
-$schema: https://json-schema.org/draft/2020-12/schema
-title: Cadence map spec v0
 type: object
 additionalProperties: false
-required: [version, id, walls]
+required:
+- version
+- id
+- walls
 properties:
   version:
     type: integer
-    const: 0
+    const: 1
   id:
     $ref: '#/$defs/identifier'
   walls:
     type: array
-    minItems: 1
     items:
-      type: object
-      additionalProperties: false
-      required: [id, center, size, yaw, z_min, z_max]
-      properties:
-        id:
-          $ref: '#/$defs/identifier'
-        center:
-          $ref: '#/$defs/point'
-        size:
-          type: array
-          minItems: 2
-          maxItems: 2
-          items:
-            type: number
-            exclusiveMinimum: 0
-        yaw:
-          type: number
-        z_min:
-          type: number
-        z_max:
-          type: number
+      $ref: '#/$defs/wall'
+    minItems: 0
+  doors:
+    type: array
+    items:
+      $ref: '#/$defs/door'
+    minItems: 0
+  room_rows:
+    type: array
+    items:
+      $ref: '#/$defs/row'
+    minItems: 0
+  annotations:
+    type: array
+    items:
+      oneOf:
+      - $ref: '#/$defs/point_annotation'
+      - $ref: '#/$defs/zone'
+    minItems: 0
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Cadence map spec v1
 $defs:
   identifier:
     type: string
-    pattern: '^[A-Za-z][A-Za-z0-9_]*$'
+    pattern: ^[A-Za-z][A-Za-z0-9_]*$
   point:
     type: array
+    items: &id001
+      type: number
     minItems: 2
     maxItems: 2
-    items:
+  size:
+    type: array
+    items: &id002
       type: number
+      exclusiveMinimum: 0
+    minItems: 2
+    maxItems: 2
+  wall:
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - center
+    - size
+    - yaw
+    - z_min
+    - z_max
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      center:
+        $ref: '#/$defs/point'
+      size:
+        $ref: '#/$defs/size'
+      yaw: *id001
+      z_min: *id001
+      z_max: *id001
+  door:
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - room
+    - wall
+    - offset
+    - width
+    - nav_point
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      room:
+        $ref: '#/$defs/identifier'
+      wall:
+        $ref: '#/$defs/identifier'
+      offset: *id001
+      width: *id002
+      nav_point:
+        $ref: '#/$defs/point'
+      minimum_end_distance: *id002
+  row:
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - origin
+    - yaw
+    - side
+    - room_width
+    - depth
+    - door_width
+    - door_offset
+    - wall_thickness
+    - z_min
+    - z_max
+    - rooms
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      origin:
+        $ref: '#/$defs/point'
+      yaw: *id001
+      side:
+        enum:
+        - left
+        - right
+      room_width: *id002
+      depth: *id002
+      door_width: *id002
+      door_offset: *id001
+      wall_thickness: *id002
+      z_min: *id001
+      z_max: *id001
+      rooms:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - id
+          properties:
+            id:
+              $ref: '#/$defs/identifier'
+            overrides:
+              type: object
+              additionalProperties: false
+              required: []
+              properties:
+                room_width: *id002
+                depth: *id002
+                door_width: *id002
+                door_offset: *id001
+        minItems: 1
+  point_annotation:
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - kind
+    - label
+    - point
+    - nav_point
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      kind:
+        const: point
+      label:
+        type: string
+        minLength: 1
+      point:
+        $ref: '#/$defs/point'
+      nav_point:
+        $ref: '#/$defs/point'
+  zone:
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - kind
+    - label
+    - center
+    - size
+    - yaw
+    properties:
+      id:
+        $ref: '#/$defs/identifier'
+      kind:
+        const: zone
+      label:
+        type: string
+        minLength: 1
+      center:
+        $ref: '#/$defs/point'
+      size:
+        $ref: '#/$defs/size'
+      yaw: *id001

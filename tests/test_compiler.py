@@ -68,7 +68,7 @@ class CompilerTests(unittest.TestCase):
           self._compile(spec)
   def test_rejects_invalid_contract(self):
     variants = []
-    for field, value in [("version", 1), ("version", False), ("id", "../outside"), ("walls", [])]:
+    for field, value in [("version", 0), ("version", False), ("id", "../outside"), ("walls", [])]:
       spec = copy.deepcopy(self.spec)
       spec[field] = value
       variants.append(spec)

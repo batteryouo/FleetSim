@@ -44,24 +44,9 @@ def compile_map(source: Path) -> dict:
   if error:
     location = ".".join(str(part) for part in error.absolute_path) or "map"
     raise ValueError(f"{location}: {error.message}")
-  primitives = []
-  seen = set()
-  for wall in spec["walls"]:
-    if wall["id"] in seen:
-      raise ValueError(f"Duplicate wall id: {wall['id']}")
-    seen.add(wall["id"])
-    if wall["z_max"] <= wall["z_min"]:
-      raise ValueError(f"{wall['id']}: z_max must exceed z_min")
-    primitives.append({
-      "id": wall["id"],
-      "type": "box",
-      "center": list(wall["center"]),
-      "size": list(wall["size"]),
-      "yaw": wall["yaw"],
-      "z_min": wall["z_min"],
-      "z_max": wall["z_max"],
-    })
-  result = {"version": 0, "id": spec["id"], "frame": "rep103", "primitives": primitives}
+  from assets.map_geometry import expand
+  primitives, annotations = expand(spec)
+  result = {"version": 1, "id": spec["id"], "frame": "rep103", "primitives": primitives, "annotations": annotations}
   _check_finite(result)
   return result
 def main() -> int:

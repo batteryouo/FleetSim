@@ -14,7 +14,7 @@ def compiled(directory, walls, name="fixture"):
   if not walls:
     walls = [wall("outside_scan", 1000, 1000, 1, 1)]
   source = Path(directory) / f"{name}.yaml"
-  source.write_text(yaml.safe_dump({"version": 0, "id": name, "walls": walls}), encoding="utf-8")
+  source.write_text(yaml.safe_dump({"version": 1, "id": name, "walls": walls}), encoding="utf-8")
   result = compile_map(source)
   source.with_suffix(".json").write_text(json.dumps(result, indent=2), encoding="utf-8")
   return result

@@ -1,11 +1,10 @@
 {
-  "version": 0,
+  "version": 1,
   "id": "test_room",
   "frame": "rep103",
   "primitives": [
     {
       "id": "north",
-      "type": "box",
       "center": [
         1.0,
         2.1
@@ -16,11 +15,11 @@
       ],
       "yaw": 0.0,
       "z_min": 0.0,
-      "z_max": 2.5
+      "z_max": 2.5,
+      "type": "box"
     },
     {
       "id": "south",
-      "type": "box",
       "center": [
         1.0,
         -2.1
@@ -31,11 +30,11 @@
       ],
       "yaw": 0.0,
       "z_min": 0.0,
-      "z_max": 2.5
+      "z_max": 2.5,
+      "type": "box"
     },
     {
       "id": "west",
-      "type": "box",
       "center": [
         -4.1,
         0.0
@@ -46,11 +45,11 @@
       ],
       "yaw": 0.0,
       "z_min": 0.0,
-      "z_max": 2.5
+      "z_max": 2.5,
+      "type": "box"
     },
     {
       "id": "east",
-      "type": "box",
       "center": [
         6.1,
         0.0
@@ -61,11 +60,11 @@
       ],
       "yaw": 0.0,
       "z_min": 0.0,
-      "z_max": 2.5
+      "z_max": 2.5,
+      "type": "box"
     },
     {
       "id": "rotated",
-      "type": "box",
       "center": [
         12.0,
         4.0
@@ -76,7 +75,9 @@
       ],
       "yaw": 0.5235987755982988,
       "z_min": 0.4,
-      "z_max": 1.6
+      "z_max": 1.6,
+      "type": "box"
     }
-  ]
+  ],
+  "annotations": []
 }
