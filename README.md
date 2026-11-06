@@ -4,7 +4,7 @@ Cadence is a lightweight multi-robot simulation project. Milestone 1 provides a
 YAML map compiler, a minimal Godot world, and headless physics ray-distance checks.
 Milestone 2 adds a robot spec compiler and batched float64 differential-drive
 kinematics implemented in a C++ GDExtension. Milestone 3 stage 1 adds batched lidar
-query kernels for GodotPhysics2D and Jolt 3D and an exported-release benchmark.
+queries using the selected Jolt 3D backend and an exported-release benchmark.
 Robot collision handling, noise, agent transport, and Ward 73 modeling remain later work.
 
 ## Setup
@@ -81,8 +81,8 @@ python -m unittest discover -s tests -p test_robot_compiler.py -v
 python -m unittest discover -s tests -p test_milestone2.py -v
 ```
 
-Milestone 3 functional checks run both lidar backends headless, including their
-agreement within 1e-4 m on a generated stress map:
+Milestone 3 functional checks run Jolt headless, including independent geometric
+expectations within 1e-4 m on a generated stress map and repeatable snapshot scans:
 
 ```powershell
 python -m unittest discover -s tests -p test_milestone3.py -v
@@ -99,11 +99,13 @@ python -m tools.benchmark_m3
 Alternatively pass `--release-template C:\path\to\windows_release_x86_64.exe`
 (Linux: `linux_release.x86_64`) to use an extracted official release template.
 The tool exports a staged copy under ignored `tmp/`; the normal main scene is
-unchanged. `--smoke --seconds 0.3` checks exporting and both kernels without
-claiming a benchmark decision. Full runs use five repeats, all robot/beam counts,
+unchanged. `--smoke --seconds 0.3` checks exporting and the Jolt kernel without
+claiming a throughput qualification. Full runs use five repeats, all robot/beam counts,
 and parallel instances through the physical-core count. Raw results stay under
 `tmp/`. See [M3 benchmark](docs/benchmark-m3.md) for exact commands, measurement
-scope, results, and the decision rule. Both kernels remain until human confirmation.
+scope, historical comparison results, and the decision rule. Jolt 3D is confirmed;
+the 2D runtime has been removed. New runs measure Jolt only and report `target_met`
+for full runs. `tools.report_m3` renders archived two-backend results only.
 
 To run only the headless ray check against the generated map:
 

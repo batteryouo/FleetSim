@@ -12,9 +12,13 @@ func _ready() -> void:
     get_tree().quit(1)
     return
   _config = JSON.parse_string(FileAccess.get_file_as_string(OS.get_cmdline_user_args()[0]))
+  if _config["backend"] != "jolt":
+    push_error("Only the selected Jolt backend is available")
+    get_tree().quit(1)
+    return
   _kernel = Lidar.new()
   var layout: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(_config["map"]))
-  if _kernel.configure(layout, _config["robot"], _config["backend"]) != OK:
+  if _kernel.configure(layout, _config["robot"]) != OK:
     get_tree().quit(1)
 
 func _physics_process(_delta: float) -> void:

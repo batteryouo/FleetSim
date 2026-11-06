@@ -10,6 +10,45 @@ import unittest
 from assets.build import ROOT
 from tools.m3_fixtures import compiled, poses, robot_spec, stress_map, wall
 
+def stress_range(layout, positions, robot_index, beam, robot):
+  lidar = robot["lidar"]
+  mount = lidar["mount"]
+  x, y, yaw = positions[3 * robot_index:3 * robot_index + 3]
+  origin = [x + math.cos(yaw) * mount["x"] - math.sin(yaw) * mount["y"],
+            y + math.sin(yaw) * mount["x"] + math.cos(yaw) * mount["y"]]
+  angle = yaw + mount["yaw"] + lidar["angle_min"] + beam * (lidar["angle_max"] - lidar["angle_min"]) / (lidar["beam_count"] - 1)
+  direction = [math.cos(angle), math.sin(angle)]
+  nearest = math.inf
+  for box in layout["primitives"]:
+    assert box["yaw"] == 0, "This test oracle requires axis-aligned stress-map walls"
+    if not box["z_min"] <= mount["z"] <= box["z_max"]:
+      continue
+    enter, leave = 0.0, math.inf
+    for axis in range(2):
+      lo = box["center"][axis] - box["size"][axis] / 2
+      hi = box["center"][axis] + box["size"][axis] / 2
+      if abs(direction[axis]) < 1e-15:
+        if not lo <= origin[axis] <= hi:
+          leave = -math.inf
+      else:
+        first, last = sorted([(lo - origin[axis]) / direction[axis], (hi - origin[axis]) / direction[axis]])
+        enter, leave = max(enter, first), min(leave, last)
+    if enter <= leave:
+      nearest = min(nearest, enter)
+  if robot["body"]["z_min"] <= mount["z"] <= robot["body"]["z_max"]:
+    for index in range(len(positions) // 3):
+      if index == robot_index:
+        continue
+      dx, dy = origin[0] - positions[3 * index], origin[1] - positions[3 * index + 1]
+      projection = dx * direction[0] + dy * direction[1]
+      offset = dx * dx + dy * dy - robot["footprint"]["radius"] ** 2
+      discriminant = projection * projection - offset
+      if offset <= 0:
+        nearest = 0.0
+      elif discriminant >= 0 and -projection - math.sqrt(discriminant) >= 0:
+        nearest = min(nearest, -projection - math.sqrt(discriminant))
+  return "-inf" if nearest < lidar["range_min"] else ("+inf" if nearest > lidar["range_max"] else nearest)
+
 class Milestone3Tests(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
@@ -73,7 +112,7 @@ class Milestone3Tests(unittest.TestCase):
       case["robot"]["body"] = {"z_min": lo, "z_max": hi}
       cases.append(case)
     self._run(cases)
-  def test_stress_map_backend_equivalence(self):
+  def test_stress_map_ranges_and_repeatability(self):
     layout = stress_map(self.directory)
     self.assertGreaterEqual(len(layout["primitives"]), 300)
     cases = []
@@ -81,9 +120,14 @@ class Milestone3Tests(unittest.TestCase):
       for count in [1, 5, 20, 40]:
         robot = robot_spec()
         robot["lidar"]["beam_count"] = beams
-        cases.append({"label": f"stress_{beams}_{count}", "map": layout, "robot": robot,
-                      "snapshots": [{"ids": [f"r{i}" for i in range(count)], "poses": poses(count, phase)}
-                                    for phase in [0, .03, -.02]]})
+        snapshots = []
+        for phase in [0, .03, -.02]:
+          positions = poses(count, phase)
+          checks = [{"robot": index, "beam": beam,
+                     "range": stress_range(layout, positions, index, beam, robot)}
+                    for index in range(count) for beam in [0, beams // 2, beams - 1]]
+          snapshots.append({"ids": [f"r{i}" for i in range(count)], "poses": positions, "checks": checks})
+        cases.append({"label": f"stress_{beams}_{count}", "map": layout, "robot": robot, "snapshots": snapshots})
     self._run(cases)
   def test_failed_expectation_exits_nonzero(self):
     self._run([self._case("deliberately_wrong", [], [0, 0, 0], [[1, 1, 1]])], expected_status=1)

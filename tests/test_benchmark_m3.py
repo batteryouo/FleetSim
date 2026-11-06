@@ -1,7 +1,7 @@
 import unittest
 
 from assets.build import ROOT
-from tools.benchmark_m3 import decide, fixture_output, parallel_counts, summary
+from tools.benchmark_m3 import decide, fixture_output, parallel_counts, run_group, summary
 
 def measurements(planar=400, jolt=350):
   return [{"backend": backend, "count": count, "beams": 360,
@@ -11,6 +11,9 @@ def measurements(planar=400, jolt=350):
           for count in [5, 20]]
 
 class BenchmarkM3Tests(unittest.TestCase):
+  def test_retired_backend_is_rejected_before_starting_workers(self):
+    with self.assertRaisesRegex(ValueError, "Jolt"):
+      run_group(None, None, "retired", "2d", 5, 360, 1, .3)
   def test_exactly_one_meets_target(self):
     self.assertEqual(decide(measurements(300, 190))["outcome"], "GodotPhysics2D")
     self.assertEqual(decide(measurements(190, 300))["outcome"], "Jolt 3D")

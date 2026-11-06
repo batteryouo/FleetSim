@@ -2,8 +2,9 @@
 
 ## Outcome
 
-The project-brief rule recommends **Jolt 3D**. Both kernels are retained;
-human confirmation is required before removing either kernel. No stage 2 is implemented.
+The project-brief rule recommends **Jolt 3D**, and this choice is confirmed.
+The current runtime retains only Jolt. No stage 2 is implemented.
+This report preserves the historical two-backend measurements.
 
 The recorded dataset used **STATIC robot query bodies**.
 
@@ -174,6 +175,10 @@ Each instance has 5 robots and 360 beams. Values are median [min, max] across fi
 ![Parallel curves](figures/m3-parallel.png)
 
 ## Reproduction
+
+Use a separate checkout of `9d36f69` to rerun the historical two-backend
+comparison below. Current code runs Jolt only; see README for its commands.
+`tools.report_m3` accepts archived full two-backend datasets, not Jolt-only runs.
 
 From the repository root, with a matching Godot editor and official release
 export template installed (or an extracted template passed explicitly):

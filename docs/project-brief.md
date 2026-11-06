@@ -41,9 +41,9 @@ for the full commit, commands, and target ABI requirements. macOS is unvalidated
 Python dependencies are pinned in `requirements.txt`. Blender is not needed yet
 and remains unpinned.
 
-Milestones 1 through 3 use 3D physics, selected explicitly in `sim/project.godot`
-(currently Jolt Physics). This is provisional: the final geometry and query
-backend is decided by the Milestone 3 benchmark.
+Jolt 3D is the confirmed geometry and query backend, selected explicitly in
+`sim/project.godot` after the Milestone 3 comparison. Robot state remains planar;
+lidar uses GDScript engine queries and kinematics remains in C++.
 
 ## Architecture
 
@@ -184,6 +184,10 @@ Ward 73 once a real dimension is measured for scale calibration.
 
 ### Milestone 3 throughput benchmark
 
+The stage 1 comparison is complete and Jolt 3D is confirmed. The rules below
+document that selection; `docs/benchmark-m3.md` preserves the measured evidence.
+Current benchmark runs measure Jolt only.
+
 - **Stress map**: generated in code with ward-like complexity (hundreds of wall rectangles, for example a long corridor lined with rooms), plus moving robots that the lidar must also hit.
 - **Stage 1**: compare GodotPhysics2D and Jolt 3D query kernels in GDScript. Only the query kernel is implemented for both backends, not full features.
 - **Stage 2**, only if neither backend meets the target in stage 1: analytic ray intersection with a spatial index, implemented in the C++ GDExtension.
@@ -208,11 +212,10 @@ configurable dt, explicit velocity and acceleration limits, and headless accepta
 tests. The integrator uses planar REP-103 state without robot nodes or physics bodies.
 See `docs/native-build.md` for native build and loading requirements.
 See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
-compile and test commands. Milestone 3 stage 1 adds snapshot-driven lidar query
-kernels for GodotPhysics2D and Jolt 3D, with headless geometry/parity tests and an
-exported-release throughput and peak-memory benchmark. The 3D engine is now Jolt;
-both query kernels are retained pending human confirmation of the report in
-`docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and agent
+compile and test commands. Milestone 3 stage 1 provides snapshot-driven Jolt 3D
+lidar queries, with headless geometry and repeatability tests and an exported-release
+throughput and peak-memory benchmark. The 2D query runtime is removed following
+confirmation of the selection in `docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and agent
 transport remain outside this implementation.
 
 ## Open Questions
@@ -221,7 +224,6 @@ These are undecided. Do not assume an answer; ask, or implement in a way that ke
 
 - Training paradigm: reinforcement learning with custom observations, or a full ROS 2 / Nav2 stack in the loop?
 - Sensors: lidar and odometry only, or also cameras?
-- Geometry and query backend: Godot 2D physics, Jolt 3D, or a GDExtension. Robot state is planar either way. Decided by the Milestone 3 benchmark using the decision rule above.
 - Robot platform: A100. Its URDF and Gazebo xacro files are local references under `tmp/`, not tracked. The lidar model is needed to confirm scan parameters (beam count, angle range, range limits). Controller configuration is needed to confirm the provisional acceleration limits.
 - Map source: hand-written specs, an existing occupancy grid, or a floor plan?
 - Blender version to pin; broader Python and Godot version compatibility to validate.

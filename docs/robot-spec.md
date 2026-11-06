@@ -208,8 +208,8 @@ outside the implementation.
 ## Batched lidar queries (Milestone 3 stage 1)
 
 `sim/sensors/lidar_kernel.gd` owns an independent query space. Call
-`configure(compiled_map, compiled_robot, backend)` with `backend` equal to `2d`
-or `jolt`, then `scan_batch(snapshot)`. Configuration accepts validated compiler
+`configure(compiled_map, compiled_robot)`, then `scan_batch(snapshot)`. The kernel
+requires Jolt Physics in project settings. Configuration accepts validated compiler
 outputs; snapshots contain `ids` (unique string array), `poses`
 (`PackedFloat64Array` with the same 3N layout as kinematics), and `robot_spec`
 (the configuration used to create the space). An empty batch returns no scans.
@@ -220,12 +220,10 @@ owning Godot runtime; no World node or shared process state is accessed.
 The kernel updates every query-only robot body from the snapshot before issuing
 any ray, including newly added, moved, and removed robots. Static query proxies
 have collision mask zero: they do not integrate motion or resolve contacts.
-The 2D backend filters map rectangles by the closed height interval at load time;
-Jolt uses real 3D boxes and horizontal rays at the mount z. Other robots use their
-true circle radius (a cylinder in Jolt) and body height interval. Each ray query
+Jolt uses 3D boxes and horizontal rays at the mount z. Other robots use cylinders
+with their true footprint radius and body height interval. Each ray query
 explicitly excludes its own body's RID. Jolt shape margins are zero so proxy
-geometry matches the specified dimensions. Coordinate conversion for both query
-backends stays in `sim/bridge/frames.gd`; authoritative state stays float64 REP-103.
+geometry matches the specified dimensions. Coordinate conversion stays in `sim/bridge/frames.gd`; authoritative state stays float64 REP-103.
 Engine query vectors use the standard engine's single precision, so range
 comparisons use tolerances; storing results in float64 does not recover that precision.
 
@@ -256,6 +254,7 @@ shrinking, scan noise, collision response, or wall-clock scheduling is applied.
 
 Run `python -m unittest discover -s tests -p test_milestone3.py -v` for corridor,
 pose composition, range/height boundary, robot movement, self-exclusion, and
-stress-map equivalence checks on both kernels. See `docs/benchmark-m3.md` for
-release-export throughput, peak memory, reproduction commands, and the backend
-decision awaiting human confirmation.
+stress-map checks against independent box/circle intersections (1e-4 m tolerance).
+Repeated snapshots must return bit-identical range arrays. See
+`docs/benchmark-m3.md` for the historical comparison that selected Jolt 3D;
+README documents the current Jolt-only release benchmark.

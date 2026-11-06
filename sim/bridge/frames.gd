@@ -6,12 +6,6 @@ static func position_to_godot(position: Array) -> Vector3:
 static func point_to_godot(x: float, y: float, z: float) -> Vector3:
   return Vector3(-y, z, -x)
 
-static func planar_point_to_godot(x: float, y: float) -> Vector2:
-  return Vector2(x, -y)
-
-static func planar_yaw_to_godot(yaw: float) -> float:
-  return -yaw
-
 static func size_to_godot(size: Array) -> Vector3:
   return Vector3(float(size[1]), float(size[2]), float(size[0]))
 

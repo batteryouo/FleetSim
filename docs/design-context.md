@@ -53,10 +53,10 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Therefore observations and actions must match the semantics of ROS LaserScan, Odometry, and Twist: scan angle range, angular resolution, range limits, rates, noise, velocity and acceleration limits, control rate, and latency.
 - Running Nav2 in the loop was rejected for now because it brings back the weight that motivated leaving Gazebo.
 
-### Planar state; backend decided by measurement
+### Planar state with the selected Jolt 3D backend
 
 - Decided: robot and pedestrian state is planar, (x, y, yaw). Lidar, differential drive, collision checks, and pedestrians are all planar problems.
-- Open: the geometry and query backend. Milestones 1 through 3 use 3D physics provisionally; the Milestone 3 benchmark decides.
+- Confirmed: Jolt 3D for geometry and lidar queries. The measured Jolt/2D ratios were 92.94% at 5 robots and 95.95% at 20 robots, both above the 70% threshold; both backends met the 200 steps/s target at 5 robots. See `docs/benchmark-m3.md`.
 - 2D backend advantages: likely cheaper broadphase and ray queries; height ranges can be resolved at compile time by assigning each primitive to the lidar layer and/or the body layer from its z interval.
 - 3D backend advantages: obstacle height ranges are handled naturally by casting rays at the lidar height; cameras, if needed, render from the same scene without a mirrored copy.
 - Either way, the compiled map carries explicit height ranges, so the map pipeline does not depend on the choice.
@@ -86,7 +86,7 @@ Games need authoritative servers, prediction, and rollback because players inter
 - World orchestration and test harnesses use GDScript for fast iteration. Batched kinematics is implemented as a C++17 GDExtension by preference, without a measured performance justification; its native build and loading infrastructure is available for later work.
 - Isolate hot paths behind stable interfaces: lidar batch queries, swept collision checks, and batched kinematics integration.
 - The main risk is call overhead (for example, 5 robots times 360 beams is 1800 engine calls per step), not GDScript arithmetic.
-- The Milestone 3 benchmark (specified in the brief) decides the lidar backend and whether lidar computation moves to native code. The existing C++ kinematics implementation does not decide the lidar backend or establish a performance result.
+- The Milestone 3 benchmark selected Jolt engine queries through GDScript; stage 2 native lidar is not required by the measured target. The existing C++ kinematics implementation does not establish a lidar performance result.
 - The target is single-instance throughput (200 steps/s at 5 robots and 360 beams), not a total for one machine. Training environments are independent and need no synchronization, so total throughput scales by running more instances, possibly across several machines. A per-instance number is portable across machines and deployment sizes; a per-machine total would depend on which machine trains. The value 200 comes from an earlier aggregate goal of 1,000 steps/s on a machine running about 5 instances after reserving cores for the Python side.
 - The 2D/3D comparison is a ratio measured on one machine, so it is largely independent of which machine runs the benchmark.
 - The M3 stage 1 release benchmark on the i5-12600K measured 356 steps/s for GodotPhysics2D and 331 steps/s for Jolt at 5 robots and 360 beams. Kinematics plus lidar cost about 1.6 and 1.7 microseconds per ray respectively; these are amortized full-step costs, not isolated engine-call timings. See `docs/benchmark-m3.md` for the measured configuration and spread.
@@ -94,7 +94,7 @@ Games need authoritative servers, prediction, and rollback because players inter
 - The decision rule favors 3D unless 2D is clearly faster: 3D handles obstacle height ranges naturally, needs no mirrored scene for cameras, keeps an outdoor option open, and keeps a single geometry representation. The 70% threshold, rather than a looser one, reflects that today's headroom will be consumed by pedestrians, larger fleets, and denser scans.
 - If stage 2 is needed, the analytic lidar kernel depends only on the map and a state snapshot, not on Godot. This also suits distributed sensing: a node can compute scans without running the engine. The cost is writing intersection code for each new primitive type, which stays manageable because obstacles are simple primitives.
 - Measurements use the release build used for training; the editor binary is a debug build and runs GDScript slower.
-- Stage 1 compares only the query kernel on both backends, to avoid implementing every feature twice.
+- Stage 1 compared only the query kernel on both backends, to avoid implementing every feature twice.
 - C# was considered but adds a .NET dependency.
 
 ## Reference Site: Ward 73
@@ -111,10 +111,10 @@ Games need authoritative servers, prediction, and rollback because players inter
 
 - Milestone 1 is complete: map spec v0, the YAML-to-JSON compiler, the minimal Godot loader (now running on Jolt), headless ray-distance tests, and loader rejection tests.
 - Milestone 2 is complete: robot spec v0 for the A100 (circle footprint radius 0.27 m), its compiler, and batched float64 differential-drive kinematics implemented in C++17 through GDExtension, with a thin GDScript entry point and headless tests. See `docs/robot-spec.md`.
-- Windows x86_64 passed all 50 tests through M3 stage 1. Arch Linux x86_64 passed the 37-test M1/M2 suite at commit `6ca0d76`, including native `.so` loading and dynamic dependency checks; M3 is not yet validated on Linux. Environment versions and commands are recorded in `docs/native-build.md`. macOS remains unvalidated.
+- Windows x86_64 passed all 51 tests through M3 stage 1. Arch Linux x86_64 passed the 37-test M1/M2 suite at commit `6ca0d76`, including native `.so` loading and dynamic dependency checks; M3 is not yet validated on Linux. Environment versions and commands are recorded in `docs/native-build.md`. macOS remains unvalidated.
 - Commits are local and not pushed.
 - References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
-- Milestone 3 stage 1 provides two snapshot-driven lidar kernels (GodotPhysics2D and Jolt 3D), headless functional/parity tests, and an exported-release benchmark. See `docs/benchmark-m3.md` for measurements and the decision-rule outcome; human confirmation is required before either kernel is removed. No stage 2, noise, collision response, or Python bridge is implemented.
+- Milestone 3 stage 1 provides the confirmed Jolt 3D snapshot-driven lidar kernel, headless geometry/repeatability tests, and an exported-release benchmark. The 2D runtime is removed; `docs/benchmark-m3.md` preserves the historical comparison and decision rule. No stage 2, noise, collision response, or Python bridge is implemented.
 - After Milestone 3: the Ward 73 round, possibly split into (a) map spec v1 on a synthetic map and (b) tracing Ward 73 after scale calibration. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a connectivity test (robot radius 0.3 m, every room door reachable from the nurse station).
 
 ## Open Questions

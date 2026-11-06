@@ -1,4 +1,4 @@
-"""Exports and measures the Milestone 3 release query kernels."""
+"""Exports and measures the selected Jolt release query kernel."""
 import argparse
 import hashlib
 import json
@@ -18,7 +18,9 @@ from tools.m3_fixtures import poses, robot_spec, stress_map
 
 COUNTS = [1, 2, 5, 10, 20, 40]
 BEAMS = [360, 400, 720]
+# Historical comparison labels; only Jolt is executable.
 BACKENDS = ["2d", "jolt"]
+RUN_BACKENDS = ["jolt"]
 
 def command(args, **kwargs):
   result = subprocess.run([str(value) for value in args], cwd=ROOT, capture_output=True, text=True, **kwargs)
@@ -81,6 +83,8 @@ def export_project(godot, output, release_template):
     raise RuntimeError("Release export did not produce an executable")
   return executable
 def run_group(executable, output, label, backend, count, beams, instances, seconds):
+  if backend not in RUN_BACKENDS:
+    raise ValueError("Only the selected Jolt backend is available")
   directory = output / label
   directory.mkdir()
   robot = robot_spec()
@@ -164,7 +168,7 @@ def main():
   parser.add_argument("--release-template", type=Path)
   parser.add_argument("--output", type=Path, default=ROOT / "tmp" / ("m3-" + time.strftime("%Y%m%d-%H%M%S")))
   parser.add_argument("--seconds", type=float, default=2.0)
-  parser.add_argument("--smoke", action="store_true", help="Export and run one condition per backend, not a decision benchmark")
+  parser.add_argument("--smoke", action="store_true", help="Export and run one Jolt condition, not a decision benchmark")
   args = parser.parse_args()
   if not args.godot or args.seconds <= 0:
     parser.error("A Godot editor executable and positive duration are required")
@@ -187,21 +191,21 @@ def main():
              "dt": .05, "warmup_steps": 50, "single": [], "parallel": [], "smoke": args.smoke}
   for beams in ([360] if args.smoke else BEAMS):
     for count in ([5] if args.smoke else COUNTS):
-      paired = {backend: [] for backend in BACKENDS}
+      paired = {backend: [] for backend in RUN_BACKENDS}
       for repeat in range(1 if args.smoke else 5):
-        for backend in (BACKENDS if repeat % 2 == 0 else BACKENDS[::-1]):
+        for backend in RUN_BACKENDS:
           paired[backend] += run_group(executable, output, f"single-{backend}-{count}-{beams}-{repeat}",
                                         backend, count, beams, 1, args.seconds)
-      for backend in BACKENDS:
+      for backend in RUN_BACKENDS:
         item = aggregate(backend, count, beams, paired[backend])
         results["single"].append(item)
         print(f"{backend} N={count} beams={beams}: {item['steps_per_second']}", flush=True)
       write_json(output / "results.json", results)
   if not args.smoke:
     for instances in parallel_counts(machine["physical_cores"]):
-      paired = {backend: [] for backend in BACKENDS}
+      paired = {backend: [] for backend in RUN_BACKENDS}
       for repeat in range(5):
-        for backend in (BACKENDS if repeat % 2 == 0 else BACKENDS[::-1]):
+        for backend in RUN_BACKENDS:
           runs = run_group(executable, output, f"parallel-{backend}-{instances}-{repeat}",
                            backend, 5, 360, instances, args.seconds)
           paired[backend].append({"instances": runs,
@@ -209,13 +213,13 @@ def main():
             "total_steps": sum(run["steps_per_second"] for run in runs),
             "wall_total_steps": sum(run["wall_steps_per_second"] for run in runs),
             "per_instance_peak_bytes": statistics.mean(run["peak_bytes"] for run in runs)})
-      for backend in BACKENDS:
+      for backend in RUN_BACKENDS:
         results["parallel"].append({"backend": backend, "instances": instances, "runs": paired[backend],
           **{key: summary([run[key] for run in paired[backend]]) for key in
              ["per_instance_steps", "total_steps", "wall_total_steps", "per_instance_peak_bytes"]}})
         print(f"parallel {backend} x{instances}: {results['parallel'][-1]['total_steps']}", flush=True)
       write_json(output / "results.json", results)
-    results["decision"] = decide(results["single"])
+    results["target_met"] = next(item for item in results["single"] if item["count"] == 5 and item["beams"] == 360)["steps_per_second"]["median"] >= 200
   write_json(output / "results.json", results)
   print(f"Results: {output / 'results.json'}", flush=True)
 

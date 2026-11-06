@@ -1,4 +1,4 @@
-"""Renders a completed M3 benchmark as tables and reproducible plots."""
+"""Renders archived two-backend M3 measurements as tables and plots."""
 import argparse
 import json
 from pathlib import Path
@@ -64,7 +64,7 @@ def charts(data, directory):
 def render(source):
   data = json.loads(source.read_text(encoding="utf-8"))
   if data["smoke"] or len(data["single"]) != 36 or any(len(item["runs"]) != 5 for item in data["single"]):
-    raise ValueError("A full five-repeat benchmark is required")
+    raise ValueError("An archived full two-backend, five-repeat benchmark is required")
   expected = {(backend, count, beams) for backend in BACKENDS for count in COUNTS for beams in BEAMS}
   if {(item["backend"], item["count"], item["beams"]) for item in data["single"]} != expected:
     raise ValueError("Incomplete single-instance conditions")
@@ -81,8 +81,9 @@ def render(source):
   machine = data["machine"]
   lookup = {(item["backend"], item["count"], item["beams"]): item for item in data["single"]}
   lines = ["# Milestone 3 stage 1 benchmark", "", "## Outcome", "",
-    f"The project-brief rule recommends **{decision['outcome']}**. Both kernels are retained;",
-    "human confirmation is required before removing either kernel. No stage 2 is implemented.", "",
+    f"The project-brief rule recommends **{decision['outcome']}**.",
+    "The current runtime retains only the confirmed Jolt backend. No stage 2 is implemented.",
+    "This report preserves historical two-backend measurements.", "",
     f"The recorded dataset used **{data.get('robot_body_mode', 'static').upper()} robot query bodies**.", "",
     "At 5 robots and 360 beams, the single-instance target is median >= 200 steps/s:", "",
     "| Backend | Steps/s median [min, max] | Target met | Peak MiB median [min, max] |",
@@ -183,6 +184,9 @@ def render(source):
   for item in data["parallel"]:
     lines.append(f"| {item['backend']} | {item['instances']} | {spread(item['per_instance_steps'])} | {spread(item['total_steps'])} | {spread(item['per_instance_peak_bytes'], 1048576)} |")
   lines += ["", "![Parallel curves](figures/m3-parallel.png)", "", "## Reproduction", "",
+    "Use a separate checkout of `9d36f69` to rerun the historical two-backend",
+    "comparison below. Current code runs Jolt only; see README for its commands.",
+    "`tools.report_m3` accepts archived full two-backend datasets, not Jolt-only runs.", "",
     "From the repository root, with a matching Godot editor and official release",
     "export template installed (or an extracted template passed explicitly):", "", "```powershell",
     'cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DGODOTCPP_TARGET=template_release',
