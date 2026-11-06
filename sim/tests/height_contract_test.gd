@@ -24,7 +24,7 @@ func _initialize() -> void:
     var status := world.load_map(path)
     if status == OK or world.get_child_count() != 0:
       failures += 1
-      push_error("Invalid height contract must fail without creating bodies: " + path)
+      push_error("Invalid compiled map must fail without creating bodies: " + path)
     world.free()
   if failures == 0:
     print("HEIGHT_CONTRACT_PASS: %d invalid maps rejected" % paths.size())

@@ -1,7 +1,10 @@
 extends Node3D
 
 const Frames = preload("res://bridge/frames.gd")
+const WALL_LAYER := 1
 @export var map_path: String = ""
+var _map_loaded := false
+var _id_pattern := RegEx.create_from_string("^[A-Za-z][A-Za-z0-9_]*$")
 
 func _ready() -> void:
   if not map_path.is_empty():
@@ -10,7 +13,7 @@ func _ready() -> void:
       get_tree().quit(1)
 
 func load_map(path: String) -> Error:
-  if has_meta("map_loaded"):
+  if _map_loaded:
     push_error("A map is already loaded")
     return ERR_ALREADY_IN_USE
   var file := FileAccess.open(path, FileAccess.READ)
@@ -28,6 +31,7 @@ func load_map(path: String) -> Error:
   for primitive in data["primitives"]:
     var body := StaticBody3D.new()
     body.name = primitive["id"]
+    body.collision_layer = WALL_LAYER
     var height := float(primitive["z_max"]) - float(primitive["z_min"])
     var center := [primitive["center"][0], primitive["center"][1], float(primitive["z_min"]) + height / 2.0]
     body.position = Frames.position_to_godot(center)
@@ -43,7 +47,7 @@ func load_map(path: String) -> Error:
     visual.mesh = mesh
     body.add_child(visual)
     add_child(body)
-  set_meta("map_loaded", true)
+  _map_loaded = true
   return OK
 
 func _valid_map(data: Variant) -> bool:
@@ -60,7 +64,7 @@ func _valid_map(data: Variant) -> bool:
     if not primitive is Dictionary or primitive.get("type") != "box":
       return false
     var id = primitive.get("id")
-    if not id is String or id.is_empty() or ids.has(id):
+    if not id is String or _id_pattern.search(id) == null or ids.has(id):
       return false
     ids[id] = true
     if not _vector2_array(primitive.get("center")) or not _vector2_array(primitive.get("size")):

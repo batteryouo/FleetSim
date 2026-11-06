@@ -32,7 +32,6 @@ def _check_finite(value):
   elif isinstance(value, list):
     for child in value:
       _check_finite(child)
-
 def compile_map(source: Path) -> dict:
   """Reads and validates a map; returns REP-103 primitives or raises ValueError."""
   try:
@@ -65,7 +64,6 @@ def compile_map(source: Path) -> dict:
   result = {"version": 0, "id": spec["id"], "frame": "rep103", "primitives": primitives}
   _check_finite(result)
   return result
-
 def main() -> int:
   """Compiles a map to JSON, returning a nonzero status on invalid input."""
   parser = argparse.ArgumentParser(description=__doc__)

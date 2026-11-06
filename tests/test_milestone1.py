@@ -10,6 +10,8 @@ import unittest
 
 from assets.build import ROOT, compile_map
 
+MISSING = object()
+
 class Milestone1Tests(unittest.TestCase):
   def test_compiled_map_has_expected_physics_ray_distances(self):
     godot = os.environ.get("GODOT_BIN") or shutil.which("godot") or shutil.which("godot4")
@@ -39,20 +41,31 @@ class Milestone1Tests(unittest.TestCase):
     compiled = compile_map(ROOT / "spec" / "maps" / "test_room.yaml")
     cases = [
       ("z_min", None), ("z_max", "2.5"), ("z_min", True),
-      ("z_min", 2.5), ("z_min", 3),
+      ("z_min", 2.5), ("z_min", 3), ("z_max", "missing"),
       ("center", [1, 2, 3]), ("size", [1, 2, 3]),
+      ("size", [0, 1]), ("id", "north"),
+      ("id", "bad/id"), ("id", "bad:id"), ("id", "bad.id"),
+      ("id", "1wall"), ("id", ""),
     ]
     with tempfile.TemporaryDirectory(prefix="cadence-heights-") as workspace:
       paths = []
-      for index, (field, value) in enumerate(cases + [("z_min", "missing"), ("z_max", "missing")]):
+      for index, (field, value) in enumerate(cases + [("z_min", MISSING), ("z_max", MISSING)]):
         data = copy.deepcopy(compiled)
-        if value == "missing":
+        if value is MISSING:
           del data["primitives"][1][field]
         else:
           data["primitives"][1][field] = value
         path = Path(workspace) / f"invalid_{index}.json"
         path.write_text(json.dumps(data), encoding="utf-8")
         paths.append(str(path))
+      wrong_frame = copy.deepcopy(compiled)
+      wrong_frame["frame"] = "godot"
+      path = Path(workspace) / "wrong_frame.json"
+      path.write_text(json.dumps(wrong_frame), encoding="utf-8")
+      paths.append(str(path))
+      path = Path(workspace) / "invalid_json.json"
+      path.write_text('{"version": 0,', encoding="utf-8")
+      paths.append(str(path))
       manifest = Path(workspace) / "manifest.json"
       manifest.write_text(json.dumps(paths), encoding="utf-8")
       result = subprocess.run(

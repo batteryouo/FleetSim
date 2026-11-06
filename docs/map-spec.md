@@ -57,7 +57,10 @@ in REP-103; the compiler does not convert to Godot coordinates or embed referenc
 `sim/world/map_loader.gd` validates the compiled version, frame, and primitives
 before creating `StaticBody3D` walls with `BoxShape3D` collision geometry and matching
 box meshes. It loads one map per instance. A malformed file fails without building
-a partial map. Collision bodies use layer 1. The main scene loads the committed
+a partial map. Collision bodies explicitly use `MapLoader.WALL_LAYER` (layer 1),
+which also supplies the ray test query mask. Primitive IDs must match the source
+schema's `^[A-Za-z][A-Za-z0-9_]*$` pattern before being used as node names.
+The main scene loads the committed
 test map; tests explicitly pass the path of a freshly compiled map. The loader
 requires two-component footprints, finite height endpoints, and `z_max > z_min`.
 It derives the 3D box height and center only when constructing collision and visual
@@ -88,8 +91,9 @@ expected distance within 0.001 m. Any unexpected miss, hit, engine script error,
 timeout, or unavailable Godot binary fails the test.
 
 A separate headless contract test rejects missing, nonnumeric, zero-width, or
-reversed height intervals and three-component footprints. Each malformed primitive
-follows a valid primitive to verify that rejection leaves zero child bodies.
+reversed height intervals, three-component footprints, zero footprint dimensions,
+duplicate or invalid primitive IDs, wrong frames, and invalid JSON. Each malformed
+primitive follows a valid primitive to verify that rejection leaves zero child bodies.
 
 Godot references: [headless command line](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html)
 and [physics ray queries](https://docs.godotengine.org/en/stable/tutorials/physics/ray-casting.html).

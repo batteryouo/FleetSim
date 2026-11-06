@@ -49,7 +49,7 @@ class PhysicsChecks extends Node:
   func _ray(origin: Array, direction: Array) -> Dictionary:
     var start := Frames.position_to_godot(origin)
     var end := start + Frames.position_to_godot(direction).normalized() * 20.0
-    var query := PhysicsRayQueryParameters3D.create(start, end, 1)
+    var query := PhysicsRayQueryParameters3D.create(start, end, MapLoader.WALL_LAYER)
     return world.get_world_3d().direct_space_state.intersect_ray(query)
 
   func _hit(label: String, origin: Array, direction: Array, expected: float, wall: String) -> void:

@@ -17,7 +17,7 @@ Use the Godot console executable on Windows. Set its actual path for the current
 PowerShell session; no persistent environment changes are required:
 
 ```powershell
-$env:GODOT_BIN = 'E:\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe'
+$env:GODOT_BIN = 'C:\path\to\Godot_v4.7.1-stable_win64_console.exe'
 ```
 
 On other machines, set `GODOT_BIN` to the local executable or put `godot` / `godot4`
