@@ -94,8 +94,8 @@ class CompilerTests(unittest.TestCase):
     output = Path(self.workspace.name) / "output.json"
     output.write_text("existing output\n", encoding="utf-8")
     result = subprocess.run(
-      [sys.executable, str(ROOT / "assets" / "build.py"), str(self.source), "--output", str(output)],
-      capture_output=True, text=True, timeout=30,
+      [sys.executable, "-m", "assets.build", str(self.source), "--output", str(output)],
+      cwd=ROOT, capture_output=True, text=True, timeout=30,
     )
     self.assertEqual(result.returncode, 1)
     self.assertIn("Map compilation failed", result.stderr)

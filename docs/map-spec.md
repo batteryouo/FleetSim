@@ -32,9 +32,12 @@ are not part of v0. The engine does not contain hospital-specific assumptions.
 
 ## Compilation
 
+Run both map and robot compiler modules from the repository root so the `assets`
+package is importable. Both tools use the same `python -m` invocation style.
+
 ```powershell
-python assets/build.py spec/maps/test_room.yaml
-python assets/build.py spec/maps/test_room.yaml --output tmp/test_room.json
+python -m assets.build spec/maps/test_room.yaml
+python -m assets.build spec/maps/test_room.yaml --output tmp/test_room.json
 ```
 
 The default output is `sim/generated/<map id>.json`, independent of the working

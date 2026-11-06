@@ -19,9 +19,9 @@ class Milestone1Tests(unittest.TestCase):
     with tempfile.TemporaryDirectory(prefix="cadence-m1-") as workspace:
       output = Path(workspace) / "test_room.json"
       build = subprocess.run(
-        [sys.executable, str(ROOT / "assets" / "build.py"),
+        [sys.executable, "-m", "assets.build",
          str(ROOT / "spec" / "maps" / "test_room.yaml"), "--output", str(output)],
-        capture_output=True, text=True, timeout=30,
+        cwd=ROOT, capture_output=True, text=True, timeout=30,
       )
       self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
       result = subprocess.run(

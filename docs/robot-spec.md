@@ -61,7 +61,7 @@ rates are not imported. The control rate remains undecided.
 
 ## Compiled contract
 
-From the repository root:
+Run both map and robot compilers as modules (`python -m`) from the repository root:
 
 ```powershell
 python -m assets.build_robot spec/robots/a100.yaml

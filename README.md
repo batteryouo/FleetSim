@@ -30,12 +30,13 @@ on `PATH`. Tests fail if Godot is unavailable; they do not skip the acceptance t
 Run these commands from the repository root:
 
 ```powershell
-python assets/build.py spec/maps/test_room.yaml
+python -m assets.build spec/maps/test_room.yaml
 python -m assets.build_robot spec/robots/a100.yaml
 python -m unittest discover -s tests -v
 ```
 
-The compiler writes `sim/generated/test_room.json`. Generated maps are committed
+Both compilers use module invocation (`python -m`) from the repository root.
+The map compiler writes `sim/generated/test_room.json`. Generated maps are committed
 so the Godot world can run without Python, but must only be regenerated through
 `assets/build.py`. The test suite also compiles a fresh temporary map and loads it
 into real Godot physics before checking 13 rays with a 1 mm distance tolerance.
