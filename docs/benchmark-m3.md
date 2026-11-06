@@ -5,6 +5,10 @@
 The project-brief rule recommends **Jolt 3D**. Both kernels are retained;
 human confirmation is required before removing either kernel. No stage 2 is implemented.
 
+The recorded dataset used **STATIC robot query bodies**.
+Current body-mode semantics and post-review validation are documented in
+`docs/robot-spec.md`; the measurements below describe this recorded dataset.
+
 At 5 robots and 360 beams, the single-instance target is median >= 200 steps/s:
 
 | Backend | Steps/s median [min, max] | Target met | Peak MiB median [min, max] |

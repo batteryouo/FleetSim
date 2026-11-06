@@ -52,7 +52,7 @@ func configure(compiled_map: Dictionary, robot_spec: Dictionary, selected_backen
       _shapes.append(shape)
       var transform := Transform2D(Frames.planar_yaw_to_godot(primitive["yaw"]),
         Frames.planar_point_to_godot(primitive["center"][0], primitive["center"][1]))
-      _map_bodies.append(_body_2d(shape.get_rid(), transform, LIDAR_LAYER))
+      _map_bodies.append(_body_2d(shape.get_rid(), transform, LIDAR_LAYER, false))
     else:
       var shape := BoxShape3D.new()
       var height: float = primitive["z_max"] - primitive["z_min"]
@@ -61,16 +61,16 @@ func configure(compiled_map: Dictionary, robot_spec: Dictionary, selected_backen
       _shapes.append(shape)
       var transform := Transform3D(Basis(Vector3.UP, Frames.yaw_to_godot(primitive["yaw"])),
         Frames.point_to_godot(primitive["center"][0], primitive["center"][1], primitive["z_min"] + height / 2.0))
-      _map_bodies.append(_body_3d(shape.get_rid(), transform))
+      _map_bodies.append(_body_3d(shape.get_rid(), transform, false))
   return OK
 
 func _visible(bounds: Dictionary) -> bool:
   var height: float = _spec["lidar"]["mount"]["z"]
   return bounds["z_min"] <= height and height <= bounds["z_max"]
 
-func _body_2d(shape: RID, transform: Transform2D, layer: int) -> RID:
+func _body_2d(shape: RID, transform: Transform2D, layer: int, moving: bool) -> RID:
   var body := PhysicsServer2D.body_create()
-  PhysicsServer2D.body_set_mode(body, PhysicsServer2D.BODY_MODE_STATIC)
+  PhysicsServer2D.body_set_mode(body, PhysicsServer2D.BODY_MODE_KINEMATIC if moving else PhysicsServer2D.BODY_MODE_STATIC)
   PhysicsServer2D.body_set_collision_layer(body, layer)
   PhysicsServer2D.body_set_collision_mask(body, 0)
   PhysicsServer2D.body_add_shape(body, shape)
@@ -78,9 +78,9 @@ func _body_2d(shape: RID, transform: Transform2D, layer: int) -> RID:
   PhysicsServer2D.body_set_space(body, _space)
   return body
 
-func _body_3d(shape: RID, transform: Transform3D) -> RID:
+func _body_3d(shape: RID, transform: Transform3D, moving: bool) -> RID:
   var body := PhysicsServer3D.body_create()
-  PhysicsServer3D.body_set_mode(body, PhysicsServer3D.BODY_MODE_STATIC)
+  PhysicsServer3D.body_set_mode(body, PhysicsServer3D.BODY_MODE_KINEMATIC if moving else PhysicsServer3D.BODY_MODE_STATIC)
   PhysicsServer3D.body_set_collision_layer(body, LIDAR_LAYER)
   PhysicsServer3D.body_set_collision_mask(body, 0)
   PhysicsServer3D.body_add_shape(body, shape)
@@ -115,15 +115,22 @@ func scan_batch(snapshot: Dictionary) -> Array[Dictionary]:
     if backend == "2d":
       var transform := Transform2D(0.0, Frames.planar_point_to_godot(x, y))
       if not _robots.has(ids[index]):
-        _robots[ids[index]] = _body_2d(_robot_shape.get_rid(), transform, LIDAR_LAYER if _visible(_spec["body"]) else 0)
+        _robots[ids[index]] = _body_2d(_robot_shape.get_rid(), transform, LIDAR_LAYER if _visible(_spec["body"]) else 0, true)
       else:
+        # Kinematic targets wait for a physics tick; snapshots must be queryable now.
+        # No physics step runs between the mode changes.
+        PhysicsServer2D.body_set_mode(_robots[ids[index]], PhysicsServer2D.BODY_MODE_RIGID)
         PhysicsServer2D.body_set_state(_robots[ids[index]], PhysicsServer2D.BODY_STATE_TRANSFORM, transform)
+        PhysicsServer2D.body_set_mode(_robots[ids[index]], PhysicsServer2D.BODY_MODE_KINEMATIC)
     else:
       var transform := Transform3D(Basis.IDENTITY, Frames.point_to_godot(x, y, _spec["body"]["z_min"] + body_height / 2.0))
       if not _robots.has(ids[index]):
-        _robots[ids[index]] = _body_3d(_robot_shape_3d.get_rid(), transform)
+        _robots[ids[index]] = _body_3d(_robot_shape_3d.get_rid(), transform, true)
       else:
+        # Apply the snapshot immediately instead of queuing a kinematic target.
+        PhysicsServer3D.body_set_mode(_robots[ids[index]], PhysicsServer3D.BODY_MODE_RIGID)
         PhysicsServer3D.body_set_state(_robots[ids[index]], PhysicsServer3D.BODY_STATE_TRANSFORM, transform)
+        PhysicsServer3D.body_set_mode(_robots[ids[index]], PhysicsServer3D.BODY_MODE_KINEMATIC)
   var scans: Array[Dictionary] = []
   var lidar: Dictionary = _spec["lidar"]
   var mount: Dictionary = lidar["mount"]

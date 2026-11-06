@@ -83,6 +83,9 @@ def render(source):
   lines = ["# Milestone 3 stage 1 benchmark", "", "## Outcome", "",
     f"The project-brief rule recommends **{decision['outcome']}**. Both kernels are retained;",
     "human confirmation is required before removing either kernel. No stage 2 is implemented.", "",
+    f"The recorded dataset used **{data.get('robot_body_mode', 'static').upper()} robot query bodies**.",
+    "Current body-mode semantics and post-review validation are documented in",
+    "`docs/robot-spec.md`; the measurements below describe this recorded dataset.", "",
     "At 5 robots and 360 beams, the single-instance target is median >= 200 steps/s:", "",
     "| Backend | Steps/s median [min, max] | Target met | Peak MiB median [min, max] |",
     "| --- | --- | --- | --- |"]

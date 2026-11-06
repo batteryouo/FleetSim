@@ -153,7 +153,7 @@ cadence/
 │   ├── tests/          # Headless Godot test scripts
 │   └── generated/      # Generated assets; never edit by hand
 ├── env/                # Python bridge client and PettingZoo wrapper
-├── tools/              # URDF and occupancy-grid converters
+├── tools/              # Benchmark tooling; URDF and occupancy-grid converters
 └── tests/
 ```
 
@@ -187,7 +187,7 @@ Ward 73 once a real dimension is measured for scale calibration.
 - **Stress map**: generated in code with ward-like complexity (hundreds of wall rectangles, for example a long corridor lined with rooms), plus moving robots that the lidar must also hit.
 - **Stage 1**: compare GodotPhysics2D and Jolt 3D query kernels in GDScript. Only the query kernel is implemented for both backends, not full features.
 - **Stage 2**, only if neither backend meets the target in stage 1: analytic ray intersection with a spatial index, implemented in the C++ GDExtension.
-- **Reporting**: steps/s, rays/s, and per-instance memory, as curves over robot count (1 to at least 20) and beam count (360, 400, 720; 400 matches the A100 reference scan). Each condition runs 5 times; report the median and the spread. Stage 1 steps/s covers the lidar query kernel only; swept collision arrives in Milestone 5, so these numbers are a lower bound on per-step cost.
+- **Reporting**: steps/s, rays/s, and per-instance memory, as curves over robot count (1 to at least 20) and beam count (360, 400, 720; 400 matches the A100 reference scan). Each condition runs 5 times; report the median and the spread. Stage 1 steps/s covers kinematics plus the lidar query kernel; swept collision arrives in Milestone 5, so these numbers are a lower bound on per-step cost.
 - **Build**: run headless with the same release build used for training, not the editor's debug binary.
 - **Target**: with 5 robots, 360 beams, and a lidar scan every control step, median single-instance throughput is at least 200 steps/s. The report records the machine it was measured on. Total throughput is the per-instance rate times the number of instances across however many machines are used, so the target does not depend on a particular training machine.
 - **Parallel scaling**: also report per-instance throughput as the number of concurrent instances on one machine grows toward its physical core count, to show how much instances slow each other down.
@@ -212,8 +212,7 @@ compile and test commands. Milestone 3 stage 1 adds snapshot-driven lidar query
 kernels for GodotPhysics2D and Jolt 3D, with headless geometry/parity tests and an
 exported-release throughput and peak-memory benchmark. The 3D engine is now Jolt;
 both query kernels are retained pending human confirmation of the report in
-`docs/benchmark-m3.md`. Benchmark timing includes kinematics and lidar, as required
-by the stage 1 task. Ward 73, stage 2, robot collision handling, noise, and agent
+`docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and agent
 transport remain outside this implementation.
 
 ## Open Questions
