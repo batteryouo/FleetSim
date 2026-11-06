@@ -24,10 +24,22 @@ The project takes a game-development approach: scenes are generated from data, G
 - **Blender** (Python `bpy`, run headless): generates visual assets from specs and exports glTF.
 - **Godot 4** (run headless for training): World simulation, sensing, pedestrians, collision checks.
 - **Python**: bridge client, environment wrappers, training code.
+- **C++17 / GDExtension**: batched differential-drive kinematics with a thin GDScript entry point.
+- **CMake and pinned godot-cpp**: build the native extension against the pinned Godot API bindings.
 
-Milestone 1 is validated with Python 3.11.6 and Godot 4.7.1 stable (standard build).
-Python dependencies are pinned in `requirements.txt`. Blender is not needed yet and
-remains unpinned.
+Milestones 1 and 2 are validated in these environments, using standard Godot
+`4.7.1.stable.official.a13da4feb`:
+
+| Platform | Python | CMake | Compiler | glibc |
+| --- | --- | --- | --- | --- |
+| Windows x86_64 | 3.11.6 | 3.28.2 | MinGW GCC 13.2.0 | Not applicable |
+| Arch Linux x86_64 | 3.11.16 | 4.4.4 | GCC 16.2.1 | 2.44 |
+
+Both passed all 37 tests. The Arch validation used commit `6ca0d76`, including
+native `.so` loading and dynamic dependency checks. See `docs/native-build.md`
+for the full commit, commands, and target ABI requirements. macOS is unvalidated.
+Python dependencies are pinned in `requirements.txt`. Blender is not needed yet
+and remains unpinned.
 
 Milestones 1 through 3 use 3D physics, selected explicitly in `sim/project.godot`
 (currently GodotPhysics3D). This is provisional: the final geometry and query
@@ -132,10 +144,12 @@ cadence/
 │   ├── scripts/        # bpy generation scripts
 │   ├── sources/        # Hand-made .blend files (Git LFS)
 │   └── build.py        # spec -> glTF, outputs into sim/generated/
+├── native/             # C++17 sources, Godot adapter, and CMake build
 ├── sim/                # Godot project (project.godot lives here)
 │   ├── world/
 │   ├── robots/
 │   ├── bridge/         # Interface layer; the only place frames are converted
+│   ├── native/         # Tracked .gdextension descriptor; bin/ is ignored
 │   ├── tests/          # Headless Godot test scripts
 │   └── generated/      # Generated assets; never edit by hand
 ├── env/                # Python bridge client and PettingZoo wrapper

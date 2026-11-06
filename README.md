@@ -8,16 +8,26 @@ agent transport, and Ward 73 modeling are outside the current implementation.
 
 ## Setup
 
-Validated tools: Python 3.11.6 and Godot 4.7.1 stable (standard build, not .NET).
-Install Python dependencies from the repository root:
+Validated environments use standard Godot `4.7.1.stable.official.a13da4feb`:
+
+| Platform | Python | CMake | Compiler | glibc |
+| --- | --- | --- | --- | --- |
+| Windows x86_64 | 3.11.6 | 3.28.2 | MinGW GCC 13.2.0 | Not applicable |
+| Arch Linux x86_64 | 3.11.16 | 4.4.4 | GCC 16.2.1 | 2.44 |
+
+Both environments passed all 37 tests; the Arch run validated commit `6ca0d76`.
+See [Linux build and validation](docs/native-build.md#build-on-arch-linux) for
+the exact Linux commands and [binary portability](docs/native-build.md#linux-binary-portability)
+for target ABI requirements. macOS remains unvalidated.
+Install Python dependencies from the repository root in a Python environment:
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-Build the native extension before running Godot or the test suite. The validated
-Windows toolchain is CMake 3.28.2 and MinGW GCC 13.2.0. CMake 3.25 or newer and a
-C++17 compiler are required; put `g++` and `mingw32-make` on `PATH` for this generator:
+Build the native extension before running Godot or the test suite. CMake 3.25 or
+newer and a C++17 compiler are required. On Windows, put `g++` and `mingw32-make`
+on `PATH` for this generator; use the linked Linux commands on Arch:
 
 ```powershell
 cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release

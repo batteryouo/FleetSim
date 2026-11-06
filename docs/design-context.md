@@ -83,10 +83,10 @@ Games need authoritative servers, prediction, and rollback because players inter
 
 ### Language and performance
 
-- Start with GDScript everywhere: fast iteration, no compile step, and most code is not a bottleneck.
+- World orchestration and test harnesses use GDScript for fast iteration. Batched kinematics is implemented as a C++17 GDExtension by preference, without a measured performance justification; its native build and loading infrastructure is available for later work.
 - Isolate hot paths behind stable interfaces: lidar batch queries, swept collision checks, and batched kinematics integration.
 - The main risk is call overhead (for example, 5 robots times 360 beams is 1800 engine calls per step), not GDScript arithmetic.
-- The Milestone 3 benchmark (specified in the brief) decides the backend and whether a GDExtension is needed.
+- The Milestone 3 benchmark (specified in the brief) decides the lidar backend and whether lidar computation moves to native code. The existing C++ kinematics implementation does not decide the lidar backend or establish a performance result.
 - The target is aggregate throughput across parallel World instances, not single-instance speed. Training environments are independent and need no synchronization, so running several instances is the cheapest way to scale. Cores used by the Python side must be reserved when counting.
 - Rough estimate, to be confirmed by measurement: per-ray engine calls from GDScript cost a few microseconds each, so 1,800 rays per step limits one instance to roughly 100 to 300 steps/s. Parallel instances may still reach the target without C++.
 - Analytic ray-rectangle intersection is only competitive with a spatial index and native code; in GDScript the loop itself would be too slow. It therefore belongs to the GDExtension stage, not to the first comparison.
@@ -107,7 +107,8 @@ Games need authoritative servers, prediction, and rollback because players inter
 ## Current Status
 
 - Milestone 1 is complete: map spec v0, the YAML-to-JSON compiler, the minimal Godot loader (GodotPhysics3D), headless ray-distance tests, and loader rejection tests.
-- Milestone 2 is complete: robot spec v0 for the A100 (circle footprint radius 0.27 m), its compiler, and batched float64 differential-drive kinematics with headless tests. See `docs/robot-spec.md`.
+- Milestone 2 is complete: robot spec v0 for the A100 (circle footprint radius 0.27 m), its compiler, and batched float64 differential-drive kinematics implemented in C++17 through GDExtension, with a thin GDScript entry point and headless tests. See `docs/robot-spec.md`.
+- Windows x86_64 and Arch Linux x86_64 passed all 37 tests. The Arch validation used commit `6ca0d76`, including native `.so` loading and dynamic dependency checks; environment versions and commands are recorded in `docs/native-build.md`. macOS remains unvalidated.
 - Commits are local and not pushed.
 - References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
 - Next: Milestone 3 (lidar and throughput benchmark).
