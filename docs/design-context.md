@@ -87,9 +87,12 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Isolate hot paths behind stable interfaces: lidar batch queries, swept collision checks, and batched kinematics integration.
 - The main risk is call overhead (for example, 5 robots times 360 beams is 1800 engine calls per step), not GDScript arithmetic.
 - The Milestone 3 benchmark (specified in the brief) decides the lidar backend and whether lidar computation moves to native code. The existing C++ kinematics implementation does not decide the lidar backend or establish a performance result.
-- The target is aggregate throughput across parallel World instances, not single-instance speed. Training environments are independent and need no synchronization, so running several instances is the cheapest way to scale. Cores used by the Python side must be reserved when counting.
-- Rough estimate, to be confirmed by measurement: per-ray engine calls from GDScript cost a few microseconds each, so 1,800 rays per step limits one instance to roughly 100 to 300 steps/s. Parallel instances may still reach the target without C++.
+- The target is single-instance throughput (200 steps/s at 5 robots and 360 beams), not a total for one machine. Training environments are independent and need no synchronization, so total throughput scales by running more instances, possibly across several machines. A per-instance number is portable across machines and deployment sizes; a per-machine total would depend on which machine trains. The value 200 comes from an earlier aggregate goal of 1,000 steps/s on a machine running about 5 instances after reserving cores for the Python side.
+- The 2D/3D comparison is a ratio measured on one machine, so it is largely independent of which machine runs the benchmark.
+- Rough estimate, to be confirmed by measurement: per-ray engine calls from GDScript cost a few microseconds each, so 1,800 rays per step limits one instance to roughly 100 to 300 steps/s, close to the target.
 - Analytic ray-rectangle intersection is only competitive with a spatial index and native code; in GDScript the loop itself would be too slow. It therefore belongs to the GDExtension stage, not to the first comparison.
+- The decision rule favors 3D unless 2D is clearly faster: 3D handles obstacle height ranges naturally, needs no mirrored scene for cameras, keeps an outdoor option open, and keeps a single geometry representation. The 70% threshold, rather than a looser one, reflects that today's headroom will be consumed by pedestrians, larger fleets, and denser scans.
+- If stage 2 is needed, the analytic lidar kernel depends only on the map and a state snapshot, not on Godot. This also suits distributed sensing: a node can compute scans without running the engine. The cost is writing intersection code for each new primitive type, which stays manageable because obstacles are simple primitives.
 - Measurements use the release build used for training; the editor binary is a debug build and runs GDScript slower.
 - Stage 1 compares only the query kernel on both backends, to avoid implementing every feature twice.
 - C# was considered but adds a .NET dependency.
@@ -106,19 +109,18 @@ Games need authoritative servers, prediction, and rollback because players inter
 
 ## Current Status
 
-- Milestone 1 is complete: map spec v0, the YAML-to-JSON compiler, the minimal Godot loader (GodotPhysics3D), headless ray-distance tests, and loader rejection tests.
+- Milestone 1 is complete: map spec v0, the YAML-to-JSON compiler, the minimal Godot loader (now running on Jolt), headless ray-distance tests, and loader rejection tests.
 - Milestone 2 is complete: robot spec v0 for the A100 (circle footprint radius 0.27 m), its compiler, and batched float64 differential-drive kinematics implemented in C++17 through GDExtension, with a thin GDScript entry point and headless tests. See `docs/robot-spec.md`.
 - Windows x86_64 and Arch Linux x86_64 passed all 37 tests. The Arch validation used commit `6ca0d76`, including native `.so` loading and dynamic dependency checks; environment versions and commands are recorded in `docs/native-build.md`. macOS remains unvalidated.
 - Commits are local and not pushed.
 - References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
-- Next: Milestone 3 (lidar and throughput benchmark).
+- Milestone 3 stage 1 provides two snapshot-driven lidar kernels (GodotPhysics2D and Jolt 3D), headless functional/parity tests, and an exported-release benchmark. See `docs/benchmark-m3.md` for measurements and the decision-rule outcome; human confirmation is required before either kernel is removed. No stage 2, noise, collision response, or Python bridge is implemented.
 - After Milestone 3: the Ward 73 round, possibly split into (a) map spec v1 on a synthetic map and (b) tracing Ward 73 after scale calibration. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a connectivity test (robot radius 0.3 m, every room door reachable from the nurse station).
 
 ## Open Questions
 
 - Robot platform details: the A100 URDF and Gazebo xacro files are local references under `tmp/`, not tracked. Footprint and lidar mounting pose come from the URDF. Velocity limits are a chosen simulation action range ([-1, 1] m/s and rad/s, reverse allowed); deployment narrows actions on the inference side if the real robot needs it, so the simulator need not match the controller. Acceleration limits must come from controller parameters, not the URDF; the current values are provisional, derived from Gazebo plugin settings.
 - Lidar model, needed for scan parameters (beam count, angle range, range limits).
-- Benchmark decision rule: which backend to choose if both meet the target, and what to do if neither does.
 - Whether cameras will be used.
 - Policy network design (does not block the environment).
 - Transport and serialization, control rate, and lidar rate.

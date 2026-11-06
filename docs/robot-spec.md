@@ -22,7 +22,23 @@ min_angular_velocity: -1.0
 max_angular_velocity: 1.0
 max_linear_acceleration: 2.0
 max_angular_acceleration: 10.0
-provisional: [max_linear_acceleration, max_angular_acceleration]
+lidar:
+  mount: {x: 0.2, y: 0.0, z: 0.215, yaw: 0.0}
+  beam_count: 400
+  angle_min: -1.738520663452148
+  angle_max: 1.7385571002960205
+  range_min: 0.15
+  range_max: 16.0
+  rate_hz: 12.0
+provisional:
+  - max_linear_acceleration
+  - max_angular_acceleration
+  - lidar.beam_count
+  - lidar.angle_min
+  - lidar.angle_max
+  - lidar.range_min
+  - lidar.range_max
+  - lidar.rate_hz
 ```
 
 IDs start with an ASCII letter and contain only ASCII letters, digits, and
@@ -31,9 +47,9 @@ underscores. The circle is centered on the wheel axis and has a positive radius.
 must be strictly below its maximum; negative linear velocity permits reverse motion.
 Both acceleration limits must be positive.
 
-`provisional` is an explicit list, possibly empty, of unique top-level source field
-names whose values are placeholders. Every name must exist in the source; dotted
-paths are not field names. A provisional value remains active during simulation.
+`provisional` is an explicit list, possibly empty, of unique source field paths
+whose values are placeholders. Every path must exist in the source; nested fields
+use dot-separated keys, such as `lidar.rate_hz`. A provisional value remains active during simulation.
 The marker neither supplies a default nor disables validation. Replace a placeholder
 with a confirmed value and remove its name from this list when that value becomes
 available. The list survives compilation unchanged.
@@ -52,12 +68,23 @@ are never copied into tracked paths. `spec/robots/a100.yaml` is authoritative.
 | Angular velocity limits | [-1.0, 1.0] rad/s | Chosen simulation action range; not inferred from the URDF or hardware controller. | No |
 | `max_linear_acceleration` | 2.0 m/s² | Gazebo diff_drive `wheelAcceleration = 2`: both wheels accelerate together. | Yes |
 | `max_angular_acceleration` | 10.0 rad/s² | Opposite wheel acceleration gives (2 - (-2)) / 0.4 = 10, using Gazebo `wheelSeparation = 0.4`. | Yes |
+| `lidar.mount` | (0.2, 0, 0.215) m, yaw 0 rad | URDF `scan_joint` origin; no roll or pitch. | No |
+| `lidar.beam_count` | 400 | Gazebo ray sensor `samples`. | Yes |
+| `lidar.angle_min`, `lidar.angle_max` | -1.738520663452148, 1.7385571002960205 rad | Gazebo ray sensor angular limits. | Yes |
+| `lidar.range_min`, `lidar.range_max` | 0.15, 16 m | Gazebo ray sensor range limits. | Yes |
+| `lidar.rate_hz` | 12 Hz | Gazebo ray sensor `update_rate`. | Yes |
 
 The acceleration values are simulator settings pending controller confirmation.
 Linear and angular rate limits apply independently; this milestone does not model
 coupled wheel acceleration constraints. Deployment may narrow actions on the inference
-side; the simulator keeps the configured action range. Gazebo sensor and controller
-rates are not imported. The control rate remains undecided.
+side; the simulator keeps the configured action range. All six scan parameters
+are provisional because the physical lidar model is unknown. The mount comes from
+the robot geometry. The control rate remains undecided; `rate_hz` describes the
+sensor configuration and does not schedule scans or select an integration dt.
+
+`lidar.mount` requires four finite numeric fields. `beam_count` is an integer at
+least 2; `angle_max > angle_min`; `0 <= range_min < range_max`; `rate_hz > 0`.
+Unknown nested fields, including a noise field, are rejected.
 
 ## Compiled contract
 
@@ -175,5 +202,60 @@ Separate isolated-project tests verify loading without editor caches and failure
 when the native library is missing.
 
 The test harness exchanges complete test fixtures with a headless process; it is
-not a runtime Python bridge. Lidar, robot collision handling, noise, and dispatch
-are outside this milestone.
+not a runtime Python bridge. Robot collision handling, noise, and dispatch remain
+outside the implementation.
+
+## Batched lidar queries (Milestone 3 stage 1)
+
+`sim/sensors/lidar_kernel.gd` owns an independent query space. Call
+`configure(compiled_map, compiled_robot, backend)` with `backend` equal to `2d`
+or `jolt`, then `scan_batch(snapshot)`. Configuration accepts validated compiler
+outputs; snapshots contain `ids` (unique string array), `poses`
+(`PackedFloat64Array` with the same 3N layout as kinematics), and `robot_spec`
+(the configuration used to create the space). An empty batch returns no scans.
+Call `close()` to release server RIDs before dropping the kernel. Reconfiguration
+also releases the old space. Call from the physics-safe execution context of the
+owning Godot runtime; no World node or shared process state is accessed.
+
+The kernel updates every query-only robot body from the snapshot before issuing
+any ray, including newly added, moved, and removed robots. Static query proxies
+have collision mask zero: they do not integrate motion or resolve contacts.
+The 2D backend filters map rectangles by the closed height interval at load time;
+Jolt uses real 3D boxes and horizontal rays at the mount z. Other robots use their
+true circle radius (a cylinder in Jolt) and body height interval. Each ray query
+explicitly excludes its own body's RID. Jolt shape margins are zero so proxy
+geometry matches the specified dimensions. Coordinate conversion for both query
+backends stays in `sim/bridge/frames.gd`; authoritative state stays float64 REP-103.
+Engine query vectors use the standard engine's single precision, so range
+comparisons use tolerances; storing results in float64 does not recover that precision.
+
+The mount is rigidly composed with each planar robot pose:
+
+```text
+origin_x = robot_x + cos(yaw) * mount.x - sin(yaw) * mount.y
+origin_y = robot_y + sin(yaw) * mount.x + cos(yaw) * mount.y
+origin_z = mount.z
+angle_increment = (angle_max - angle_min) / (beam_count - 1)
+beam_angle(i) = angle_min + i * angle_increment, i = 0 .. beam_count - 1
+world_angle(i) = robot_yaw + mount.yaw + beam_angle(i)
+```
+
+Each scan contains `robot_id`, `angle_min`, `angle_max`, `angle_increment`,
+`range_min`, `range_max`, and `ranges: PackedFloat64Array`. Angles are relative
+to the lidar frame, increasing counterclockwise around +z. There is no temporal
+skew: all beams query one snapshot. A hit at either range endpoint is valid;
+no hit within `range_max` is positive infinity, and a return strictly below
+`range_min` is negative infinity, following
+[REP-117](https://www.ros.org/reps/rep-0117.html). Metadata and angular conventions
+follow [LaserScan](https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html).
+These are in-memory scan dictionaries, not ROS messages or a Python bridge.
+
+Map primitives and robot bodies are visible exactly when
+`z_min <= mount.z <= z_max`. Height endpoints are inclusive. No footprint
+shrinking, scan noise, collision response, or wall-clock scheduling is applied.
+
+Run `python -m unittest discover -s tests -p test_milestone3.py -v` for corridor,
+pose composition, range/height boundary, robot movement, self-exclusion, and
+stress-map equivalence checks on both kernels. See `docs/benchmark-m3.md` for
+release-export throughput, peak memory, reproduction commands, and the backend
+decision awaiting human confirmation.

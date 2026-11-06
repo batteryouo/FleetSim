@@ -12,4 +12,20 @@ min_angular_velocity: -1.0
 max_angular_velocity: 1.0
 max_linear_acceleration: 2.0
 max_angular_acceleration: 10.0
-provisional: [max_linear_acceleration, max_angular_acceleration]
+lidar:
+  mount: {x: 0.2, y: 0.0, z: 0.215, yaw: 0.0}
+  beam_count: 400
+  angle_min: -1.738520663452148
+  angle_max: 1.7385571002960205
+  range_min: 0.15
+  range_max: 16.0
+  rate_hz: 12.0
+provisional:
+  - max_linear_acceleration
+  - max_angular_acceleration
+  - lidar.beam_count
+  - lidar.angle_min
+  - lidar.angle_max
+  - lidar.range_min
+  - lidar.range_max
+  - lidar.rate_hz

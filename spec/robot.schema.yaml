@@ -14,6 +14,7 @@ required:
   - max_linear_acceleration
   - max_angular_acceleration
   - provisional
+  - lidar
 properties:
   version:
     type: integer
@@ -59,3 +60,23 @@ properties:
     uniqueItems: true
     items:
       type: string
+  lidar:
+    type: object
+    additionalProperties: false
+    required: [mount, beam_count, angle_min, angle_max, range_min, range_max, rate_hz]
+    properties:
+      mount:
+        type: object
+        additionalProperties: false
+        required: [x, y, z, yaw]
+        properties:
+          x: {type: number}
+          y: {type: number}
+          z: {type: number}
+          yaw: {type: number}
+      beam_count: {type: integer, minimum: 2}
+      angle_min: {type: number}
+      angle_max: {type: number}
+      range_min: {type: number, minimum: 0}
+      range_max: {type: number, exclusiveMinimum: 0}
+      rate_hz: {type: number, exclusiveMinimum: 0}

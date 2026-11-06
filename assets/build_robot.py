@@ -28,9 +28,17 @@ def compile_robot(source: Path) -> dict:
   for axis in ("linear", "angular"):
     if spec[f"min_{axis}_velocity"] >= spec[f"max_{axis}_velocity"]:
       raise ValueError(f"min_{axis}_velocity must be less than max_{axis}_velocity")
+  lidar = spec["lidar"]
+  if lidar["angle_max"] <= lidar["angle_min"]:
+    raise ValueError("lidar.angle_max must exceed lidar.angle_min")
+  if lidar["range_max"] <= lidar["range_min"]:
+    raise ValueError("lidar.range_max must exceed lidar.range_min")
   for field in spec["provisional"]:
-    if field not in spec:
-      raise ValueError(f"Unknown provisional field: {field}")
+    value = spec
+    for part in field.split("."):
+      if not isinstance(value, dict) or part not in value:
+        raise ValueError(f"Unknown provisional field: {field}")
+      value = value[part]
   return {**spec, "frame": "rep103"}
 def main() -> int:
   """Writes a compiled robot spec; failures leave existing output unchanged."""

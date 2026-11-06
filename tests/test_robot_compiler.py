@@ -33,7 +33,9 @@ class RobotCompilerTests(unittest.TestCase):
     self.assertEqual(compile_robot(SOURCE), {**self.spec, "frame": "rep103"})
     self.assertEqual(self.spec["footprint"], {"type": "circle", "radius": 0.27})
     self.assertEqual(self.spec["body"], {"z_min": 0.0, "z_max": 0.25})
-    self.assertEqual(self.spec["provisional"], ["max_linear_acceleration", "max_angular_acceleration"])
+    self.assertEqual(self.spec["provisional"], ["max_linear_acceleration", "max_angular_acceleration"] +
+                     [f"lidar.{name}" for name in self.spec["lidar"] if name != "mount"])
+    self.assertEqual(self.spec["lidar"]["mount"], {"x": .2, "y": 0, "z": .215, "yaw": 0})
   def test_generated_file_matches_source(self):
     generated = ROOT / "sim" / "generated" / "robots" / "a100.json"
     self.assertEqual(json.loads(generated.read_text(encoding="utf-8")), compile_robot(SOURCE))
@@ -49,18 +51,22 @@ class RobotCompilerTests(unittest.TestCase):
   def test_rejects_every_missing_field(self):
     paths = [(key,) for key in self.spec]
     paths += [("footprint", "type"), ("footprint", "radius"), ("body", "z_min"), ("body", "z_max")]
+    paths += [("lidar", key) for key in self.spec["lidar"]]
+    paths += [("lidar", "mount", key) for key in self.spec["lidar"]["mount"]]
     for path in paths:
       with self.subTest(path=path):
         spec = copy.deepcopy(self.spec)
-        parent = spec if len(path) == 1 else spec[path[0]]
+        parent = spec
+        for part in path[:-1]:
+          parent = parent[part]
         del parent[path[-1]]
         with self.assertRaises(ValueError):
           self._compile(spec)
   def test_rejects_unknown_fields_at_every_level(self):
-    for parent in [None, "footprint", "body"]:
+    for parent in [None, "footprint", "body", "lidar", "mount"]:
       with self.subTest(parent=parent):
         spec = copy.deepcopy(self.spec)
-        target = spec if parent is None else spec[parent]
+        target = spec["lidar"]["mount"] if parent == "mount" else (spec if parent is None else spec[parent])
         target["unknown"] = 1
         with self.assertRaises(ValueError):
           self._compile(spec)
@@ -69,7 +75,7 @@ class RobotCompilerTests(unittest.TestCase):
       ("version", 1), ("version", False), ("id", "../outside"),
       ("footprint", {"type": "rect", "radius": 0.27}),
       ("body", []), ("min_linear_velocity", True), ("max_linear_velocity", "1.0"),
-      ("provisional", ["unknown"]), ("provisional", ["body.z_min"]),
+      ("provisional", ["unknown"]), ("provisional", ["body.missing"]),
       ("provisional", [1]), ("provisional", ["body", "body"]),
     ]:
       with self.subTest(field=field, value=value):
@@ -102,10 +108,14 @@ class RobotCompilerTests(unittest.TestCase):
         variants.append(spec)
     numeric_paths = [(key,) for key in self.spec if key.startswith(("min_", "max_"))]
     numeric_paths += [("footprint", "radius"), ("body", "z_min"), ("body", "z_max")]
+    numeric_paths += [("lidar", key) for key in self.spec["lidar"] if key != "mount"]
+    numeric_paths += [("lidar", "mount", key) for key in self.spec["lidar"]["mount"]]
     for path in numeric_paths:
       for value in [float("nan"), float("inf"), -float("inf")]:
         spec = copy.deepcopy(self.spec)
-        parent = spec if len(path) == 1 else spec[path[0]]
+        parent = spec
+        for part in path[:-1]:
+          parent = parent[part]
         parent[path[-1]] = value
         variants.append(spec)
     for spec in variants:
@@ -117,11 +127,25 @@ class RobotCompilerTests(unittest.TestCase):
       "version: 0\nversion: 1\n",
       "footprint:\n  radius: 0.27\n  radius: 0.3\n",
       "body:\n  z_min: 0\n  z_min: 1\n",
+      "lidar:\n  beam_count: 400\n  beam_count: 360\n",
+      "lidar:\n  mount:\n    x: 0.2\n    x: 0.3\n",
     ]:
       with self.subTest(text=text):
         self.source.write_text(text, encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Duplicate YAML key"):
           compile_robot(self.source)
+  def test_lidar_limits_and_nested_provisional_paths(self):
+    for field, values in {"beam_count": [1, 0, True, 2.5], "angle_max": [-2, -3],
+                          "range_min": [-1, 16, 17], "range_max": [0, .1],
+                          "rate_hz": [0, -1], "noise": [0]}.items():
+      for value in values:
+        with self.subTest(field=field, value=value):
+          spec = copy.deepcopy(self.spec)
+          spec["lidar"][field] = value
+          with self.assertRaises(ValueError):
+            self._compile(spec)
+    self.spec["provisional"] = ["lidar.mount.z", "body.z_min"]
+    self.assertEqual(self._compile(self.spec)["provisional"], self.spec["provisional"])
   def test_invalid_cli_input_does_not_overwrite_output(self):
     self.source.write_text("version: 99\n", encoding="utf-8")
     output = Path(self.workspace.name) / "robot.json"

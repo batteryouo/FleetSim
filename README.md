@@ -3,8 +3,9 @@
 Cadence is a lightweight multi-robot simulation project. Milestone 1 provides a
 YAML map compiler, a minimal Godot world, and headless physics ray-distance checks.
 Milestone 2 adds a robot spec compiler and batched float64 differential-drive
-kinematics implemented in a C++ GDExtension. Lidar, robot collision handling, noise,
-agent transport, and Ward 73 modeling are outside the current implementation.
+kinematics implemented in a C++ GDExtension. Milestone 3 stage 1 adds batched lidar
+query kernels for GodotPhysics2D and Jolt 3D and an exported-release benchmark.
+Robot collision handling, noise, agent transport, and Ward 73 modeling remain later work.
 
 ## Setup
 
@@ -15,7 +16,8 @@ Validated environments use standard Godot `4.7.1.stable.official.a13da4feb`:
 | Windows x86_64 | 3.11.6 | 3.28.2 | MinGW GCC 13.2.0 | Not applicable |
 | Arch Linux x86_64 | 3.11.16 | 4.4.4 | GCC 16.2.1 | 2.44 |
 
-Both environments passed all 37 tests; the Arch run validated commit `6ca0d76`.
+Both environments passed the 37-test M1/M2 suite; the Arch run validated commit `6ca0d76`.
+The M3 release benchmark and expanded lidar suite are validated on Windows only.
 See [Linux build and validation](docs/native-build.md#build-on-arch-linux) for
 the exact Linux commands and [binary portability](docs/native-build.md#linux-binary-portability)
 for target ABI requirements. macOS remains unvalidated.
@@ -78,6 +80,30 @@ To run only the robot compiler and Milestone 2 tests:
 python -m unittest discover -s tests -p test_robot_compiler.py -v
 python -m unittest discover -s tests -p test_milestone2.py -v
 ```
+
+Milestone 3 functional checks run both lidar backends headless, including their
+agreement within 1e-4 m on a generated stress map:
+
+```powershell
+python -m unittest discover -s tests -p test_milestone3.py -v
+```
+
+For the release benchmark, build the extension with
+`-DCMAKE_BUILD_TYPE=Release -DGODOTCPP_TARGET=template_release`, install matching
+Godot export templates, then run:
+
+```powershell
+python -m tools.benchmark_m3
+```
+
+Alternatively pass `--release-template C:\path\to\windows_release_x86_64.exe`
+(Linux: `linux_release.x86_64`) to use an extracted official release template.
+The tool exports a staged copy under ignored `tmp/`; the normal main scene is
+unchanged. `--smoke --seconds 0.3` checks exporting and both kernels without
+claiming a benchmark decision. Full runs use five repeats, all robot/beam counts,
+and parallel instances through the physical-core count. Raw results stay under
+`tmp/`. See [M3 benchmark](docs/benchmark-m3.md) for exact commands, measurement
+scope, results, and the decision rule. Both kernels remain until human confirmation.
 
 To run only the headless ray check against the generated map:
 

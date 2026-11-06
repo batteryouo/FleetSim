@@ -42,7 +42,7 @@ Python dependencies are pinned in `requirements.txt`. Blender is not needed yet
 and remains unpinned.
 
 Milestones 1 through 3 use 3D physics, selected explicitly in `sim/project.godot`
-(currently GodotPhysics3D). This is provisional: the final geometry and query
+(currently Jolt Physics). This is provisional: the final geometry and query
 backend is decided by the Milestone 3 benchmark.
 
 ## Architecture
@@ -186,11 +186,16 @@ Ward 73 once a real dimension is measured for scale calibration.
 
 - **Stress map**: generated in code with ward-like complexity (hundreds of wall rectangles, for example a long corridor lined with rooms), plus moving robots that the lidar must also hit.
 - **Stage 1**: compare GodotPhysics2D and Jolt 3D query kernels in GDScript. Only the query kernel is implemented for both backends, not full features.
-- **Stage 2**, only if stage 1 misses the target: a C++ GDExtension, either batched engine queries or analytic intersection with a spatial index.
-- **Reporting**: steps/s, rays/s, and per-instance memory, as curves over robot count (1 to at least 20) and beam count (360, 720). Stage 1 steps/s covers the lidar query kernel only; swept collision arrives in Milestone 5, so these numbers are a lower bound on per-step cost.
+- **Stage 2**, only if neither backend meets the target in stage 1: analytic ray intersection with a spatial index, implemented in the C++ GDExtension.
+- **Reporting**: steps/s, rays/s, and per-instance memory, as curves over robot count (1 to at least 20) and beam count (360, 400, 720; 400 matches the A100 reference scan). Each condition runs 5 times; report the median and the spread. Stage 1 steps/s covers the lidar query kernel only; swept collision arrives in Milestone 5, so these numbers are a lower bound on per-step cost.
 - **Build**: run headless with the same release build used for training, not the editor's debug binary.
-- **Target**: on the training machine, with 5 robots, 360 beams, and a lidar scan every control step, aggregate throughput across parallel World instances is at least 1,000 steps/s. The report states how many cores the World instances use and how many are reserved for the Python side (bridge, policy inference, trainer); aggregate throughput is measured at that instance count, not one instance per core. Per-instance curves are reported for scalability. A GDExtension may be needed if parallel instances cannot reach the target.
-- **Decision rule**: TBD by the human, covering both outcomes: both backends meet the target, or neither does.
+- **Target**: with 5 robots, 360 beams, and a lidar scan every control step, median single-instance throughput is at least 200 steps/s. The report records the machine it was measured on. Total throughput is the per-instance rate times the number of instances across however many machines are used, so the target does not depend on a particular training machine.
+- **Parallel scaling**: also report per-instance throughput as the number of concurrent instances on one machine grows toward its physical core count, to show how much instances slow each other down.
+- **Decision rule**: a backend "meets the target" when it satisfies the target above.
+  - Both meet the target: choose Jolt 3D if its median single-instance throughput is at least 70% of GodotPhysics2D's at both 5 and 20 robots (360 beams); otherwise choose 2D. The 20-robot check guards headroom that pedestrians, more robots, and more beams will consume later.
+  - Exactly one meets the target: choose it.
+  - Neither meets the target: go to stage 2. Lidar then no longer depends on engine queries, so the engine backend defaults to Jolt 3D.
+  - A difference within the measured run-to-run spread counts as equal. If the comparison against the 70% threshold is a tie by this definition, lower per-instance memory decides, because memory limits how many parallel instances fit on one machine.
 
 ## Current Implementation
 
@@ -203,8 +208,13 @@ configurable dt, explicit velocity and acceleration limits, and headless accepta
 tests. The integrator uses planar REP-103 state without robot nodes or physics bodies.
 See `docs/native-build.md` for native build and loading requirements.
 See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
-compile and test commands. Ward 73, lidar, robot collision handling, noise, and agent
-transport are outside this implementation.
+compile and test commands. Milestone 3 stage 1 adds snapshot-driven lidar query
+kernels for GodotPhysics2D and Jolt 3D, with headless geometry/parity tests and an
+exported-release throughput and peak-memory benchmark. The 3D engine is now Jolt;
+both query kernels are retained pending human confirmation of the report in
+`docs/benchmark-m3.md`. Benchmark timing includes kinematics and lidar, as required
+by the stage 1 task. Ward 73, stage 2, robot collision handling, noise, and agent
+transport remain outside this implementation.
 
 ## Open Questions
 
@@ -212,7 +222,7 @@ These are undecided. Do not assume an answer; ask, or implement in a way that ke
 
 - Training paradigm: reinforcement learning with custom observations, or a full ROS 2 / Nav2 stack in the loop?
 - Sensors: lidar and odometry only, or also cameras?
-- Geometry and query backend: Godot 2D physics, Jolt 3D, or a GDExtension. Robot state is planar either way. Decided by the Milestone 3 benchmark; the decision rule is still open.
+- Geometry and query backend: Godot 2D physics, Jolt 3D, or a GDExtension. Robot state is planar either way. Decided by the Milestone 3 benchmark using the decision rule above.
 - Robot platform: A100. Its URDF and Gazebo xacro files are local references under `tmp/`, not tracked. The lidar model is needed to confirm scan parameters (beam count, angle range, range limits). Controller configuration is needed to confirm the provisional acceleration limits.
 - Map source: hand-written specs, an existing occupancy grid, or a floor plan?
 - Blender version to pin; broader Python and Godot version compatibility to validate.
