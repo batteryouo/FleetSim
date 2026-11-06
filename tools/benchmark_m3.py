@@ -183,7 +183,7 @@ def main():
              "pack_sha256": hashlib.sha256(executable.with_suffix(".pck").read_bytes()).hexdigest(),
              "native_sha256": hashlib.sha256((output / ("cadence_kinematics.dll" if os.name == "nt" else "cadence_kinematics.so")).read_bytes()).hexdigest(),
              "template_sha256": hashlib.sha256(args.release_template.read_bytes()).hexdigest() if args.release_template else "installed template"}
-  results = {"machine": machine, "robot_body_mode": "kinematic", "wall_primitives": len(layout["primitives"]), "seconds": args.seconds,
+  results = {"machine": machine, "robot_body_mode": "static", "wall_primitives": len(layout["primitives"]), "seconds": args.seconds,
              "dt": .05, "warmup_steps": 50, "single": [], "parallel": [], "smoke": args.smoke}
   for beams in ([360] if args.smoke else BEAMS):
     for count in ([5] if args.smoke else COUNTS):

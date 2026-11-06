@@ -21,18 +21,6 @@ func _run() -> void:
       for snapshot in test_case["snapshots"]:
         scans = kernel.scan_batch({"ids": snapshot["ids"], "poses": PackedFloat64Array(snapshot["poses"]),
           "robot_spec": test_case["robot"]})
-        for body in kernel._robots.values():
-          if backend == "2d":
-            if PhysicsServer2D.body_get_mode(body) != PhysicsServer2D.BODY_MODE_KINEMATIC:
-              _fail("Robot query bodies must be kinematic")
-          elif PhysicsServer3D.body_get_mode(body) != PhysicsServer3D.BODY_MODE_KINEMATIC:
-            _fail("Robot query bodies must be kinematic")
-        for body in kernel._map_bodies:
-          if backend == "2d":
-            if PhysicsServer2D.body_get_mode(body) != PhysicsServer2D.BODY_MODE_STATIC:
-              _fail("Map query bodies must stay static")
-          elif PhysicsServer3D.body_get_mode(body) != PhysicsServer3D.BODY_MODE_STATIC:
-            _fail("Map query bodies must stay static")
         if scans.size() != snapshot["ids"].size():
           _fail(test_case["label"] + ": missing scans")
           continue

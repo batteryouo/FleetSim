@@ -218,15 +218,8 @@ also releases the old space. Call from the physics-safe execution context of the
 owning Godot runtime; no World node or shared process state is accessed.
 
 The kernel updates every query-only robot body from the snapshot before issuing
-any ray, including newly added, moved, and removed robots. Robot query bodies use
-kinematic mode; map query bodies remain static. All query bodies have collision
-mask zero: they do not integrate motion or resolve contacts.
-
-For existing robots, snapshot placement temporarily switches to rigid mode,
-sets the transform, then restores kinematic mode before any query. No physics
-step occurs during this sequence. This avoids the engine's deferred kinematic
-targets, so multiple snapshots can be queried in one callback without stale poses.
-
+any ray, including newly added, moved, and removed robots. Static query proxies
+have collision mask zero: they do not integrate motion or resolve contacts.
 The 2D backend filters map rectangles by the closed height interval at load time;
 Jolt uses real 3D boxes and horizontal rays at the mount z. Other robots use their
 true circle radius (a cylinder in Jolt) and body height interval. Each ray query
@@ -266,25 +259,3 @@ pose composition, range/height boundary, robot movement, self-exclusion, and
 stress-map equivalence checks on both kernels. See `docs/benchmark-m3.md` for
 release-export throughput, peak memory, reproduction commands, and the backend
 decision awaiting human confirmation.
-
-### Kinematic query-body verification
-
-The query-body mode fix passed all 50 unittest tests on Windows, including
-immediate snapshot movement/removal and <=1e-4 m equivalence between backends.
-The headless tests also assert kinematic robot bodies and static map bodies.
-A targeted release recheck on the same i5-12600K used the stress map, 50-step
-warmup, 0.05 s configured dt, 360 beams, and five 2-second runs per condition.
-Timed work includes the immediate-placement mode changes described above.
-
-| Backend | Robots | Steps/s median [min, max] |
-| --- | --- | --- |
-| GodotPhysics2D | 5 | 337.90 [334.32, 345.30] |
-| Jolt 3D | 5 | 312.86 [300.94, 315.29] |
-| GodotPhysics2D | 20 | 81.57 [78.15, 85.55] |
-| Jolt 3D | 20 | 76.48 [74.72, 80.27] |
-
-Both meet 200 steps/s at 5 robots. Jolt/2D is 92.59% at 5 robots and 93.77%
-at 20, above 70% in both cases; the original Jolt recommendation still holds.
-Local raw results are `tmp/m3-kinematic-check/results.json`. This was a targeted
-decision-condition recheck, not a rerun of the full matrix or parallel curves;
-the original dataset in `docs/benchmark-m3.md` used static robot query bodies.
