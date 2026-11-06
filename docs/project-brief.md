@@ -184,9 +184,10 @@ Milestone 1 provides rectangular walls in map spec v0, an engine-independent JSO
 compiler, a minimal Godot loader, headless physics ray-distance acceptance tests,
 and headless tests that the loader rejects malformed compiled maps.
 Milestone 2 adds robot spec v0, its JSON compiler, and batched float64 differential-drive
-kinematics with configurable dt, explicit velocity and acceleration limits, and
-headless acceptance tests. The integrator uses planar REP-103 state without robot
-nodes or physics bodies.
+kinematics implemented as a C++ GDExtension with a thin GDScript entry point. It has
+configurable dt, explicit velocity and acceleration limits, and headless acceptance
+tests. The integrator uses planar REP-103 state without robot nodes or physics bodies.
+See `docs/native-build.md` for native build and loading requirements.
 See `docs/map-spec.md` and `docs/robot-spec.md` for the contracts and `README.md` for
 compile and test commands. Ward 73, lidar, robot collision handling, noise, and agent
 transport are outside this implementation.

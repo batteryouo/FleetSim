@@ -17,6 +17,10 @@ func _initialize() -> void:
     return
   for test_case in cases:
     _run_case(test_case, robot)
+  if not ClassDB.class_exists("CadenceKinematics") or not GDExtensionManager.is_extension_loaded(Kinematics.EXTENSION_PATH):
+    _fail("Kinematics tests must execute the Cadence C++ GDExtension")
+  else:
+    print("NATIVE_KINEMATICS: CadenceKinematics")
   if failures == 0:
     print("MILESTONE_2_PASS: %d cases" % cases.size())
   quit(0 if failures == 0 else 1)
@@ -36,6 +40,21 @@ func _run_case(test_case: Dictionary, robot: Dictionary) -> void:
   var initial_velocities := velocities.duplicate()
   var initial_commands := commands.duplicate()
   var dt: float = test_case["dt"]
+  if test_case.get("nonfinite_dt", false):
+    dt = NAN
+  if test_case.has("nonfinite_buffer"):
+    var value: float = NAN if test_case.get("nonfinite_value") == "nan" else INF
+    match test_case["nonfinite_buffer"]:
+      "states": states[0] = value
+      "velocities": velocities[0] = value
+      "commands": commands[0] = value
+  if test_case.has("limit_overrides") or test_case.has("remove_limit") or test_case.has("nonfinite_limit"):
+    robot = robot.duplicate(true)
+    robot.merge(test_case.get("limit_overrides", {}), true)
+    if test_case.has("remove_limit"):
+      robot.erase(test_case["remove_limit"])
+    if test_case.has("nonfinite_limit"):
+      robot[test_case["nonfinite_limit"]] = NAN
   for step in range(int(test_case["steps"])):
     var before_states := states.to_byte_array()
     var before_velocities := velocities.to_byte_array()

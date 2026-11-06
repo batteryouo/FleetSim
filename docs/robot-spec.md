@@ -84,7 +84,15 @@ Committed generated files are regenerated only by the compiler.
 ## Batched kinematics
 
 `sim/robots/kinematics.gd` exposes a stateless `advance(states, previous_velocities,
-commands, dt, limits)` call. It creates no nodes or physics bodies. One shared robot
+commands, dt, limits)` call through a thin adapter to the C++ `CadenceKinematics`
+GDExtension. `native/src/kinematics.cpp` contains the engine-independent numerical
+kernel; the C++ Godot adapter validates inputs and transfers float64 arrays. Build
+the extension as described in `docs/native-build.md` before use. The script loads
+it explicitly when needed, so editor import caches are not required. A missing or
+unloadable extension logs an error and returns an empty dictionary; there is no
+GDScript numerical fallback.
+
+It creates no nodes or physics bodies. One shared robot
 configuration supplies the motion limits for the batch; the compiled A100 JSON can
 be passed directly as `limits`.
 
@@ -131,11 +139,14 @@ turns without subtracting nearly equal trigonometric values. The branch uses ang
 displacement, so a small angular velocity held for a long dt is still integrated
 along an arc. The truncation at this threshold is below float64 precision.
 
-All integration and storage remain planar REP-103 float64; `Vector2` and `Vector3`
-are not used. A future visual node must convert through `sim/bridge/frames.gd` when
-it is positioned. Identical inputs in the same runtime produce bit-identical
+All integration and storage remain planar REP-103 float64: the kernel uses C++
+`double`, and its Godot interface uses `PackedFloat64Array`. `Vector2`, `Vector3`,
+and Godot `real_t` are not used for robot state. A future visual node must convert
+through `sim/bridge/frames.gd` when it is positioned. Identical inputs in the same runtime produce bit-identical
 outputs, including batch versus single-robot evaluation. No randomness or clock
-input is used. Cross-platform math-library bit identity is not specified.
+input is used. Cross-platform, cross-compiler, and C++/GDScript math-library bit
+identity are not specified; the independent acceptance expectations use numerical
+tolerances. Native compilation disables fast-math and floating-point contraction.
 
 ## Milestone 2 acceptance
 
@@ -144,8 +155,10 @@ python -m unittest discover -s tests -p test_robot_compiler.py -v
 python -m unittest discover -s tests -p test_milestone2.py -v
 ```
 
-The unittest runner compiles fresh robot JSON and starts headless Godot. A temporary
-test spec raises both accelerations to 1,000,000, enough to reach the test commands
+Build the C++ extension first using the README commands. The unittest runner
+compiles fresh robot JSON and starts headless Godot. It requires the registered
+`CadenceKinematics` native class and the loaded extension before reporting success.
+A temporary test spec raises both accelerations to 1,000,000, enough to reach the test commands
 in one step. Driving at 1 m/s for 2 s from rest must end at (2, 0, 0) within 1e-6 m.
 Production-spec tests separately verify the discrete acceleration ramps and reversal.
 
@@ -157,6 +170,9 @@ bit-for-bit against separate single-robot runs. Every valid step also verifies
 input immutability and identical output bytes on repeated calls. Invalid dt and
 buffer lengths fail without advancing state. Any failed check, script error,
 timeout, or unavailable Godot executable fails unittest with a nonzero exit status.
+Native boundary checks also reject non-finite buffers and invalid motion limits.
+Separate isolated-project tests verify loading without editor caches and failure
+when the native library is missing.
 
 The test harness exchanges complete test fixtures with a headless process; it is
 not a runtime Python bridge. Lidar, robot collision handling, noise, and dispatch

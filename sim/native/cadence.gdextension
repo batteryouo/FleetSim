@@ -1,0 +1,10 @@
+[configuration]
+entry_symbol = "cadence_library_init"
+compatibility_minimum = "4.5"
+reloadable = false
+
+[libraries]
+windows.x86_64 = "res://native/bin/cadence_kinematics.dll"
+linux.x86_64 = "res://native/bin/cadence_kinematics.so"
+macos.x86_64 = "res://native/bin/cadence_kinematics.dylib"
+macos.arm64 = "res://native/bin/cadence_kinematics.dylib"

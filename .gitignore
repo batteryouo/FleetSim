@@ -23,6 +23,7 @@ AGENTS.md
 
 # Godot editor cache
 sim/.godot/
+sim/native/bin/
 
 # C/C++ build artifacts
 CMakeFiles/

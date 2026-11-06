@@ -3,8 +3,8 @@
 Cadence is a lightweight multi-robot simulation project. Milestone 1 provides a
 YAML map compiler, a minimal Godot world, and headless physics ray-distance checks.
 Milestone 2 adds a robot spec compiler and batched float64 differential-drive
-kinematics. Lidar, robot collision handling, noise, agent transport, and Ward 73
-modeling are outside the current implementation.
+kinematics implemented in a C++ GDExtension. Lidar, robot collision handling, noise,
+agent transport, and Ward 73 modeling are outside the current implementation.
 
 ## Setup
 
@@ -14,6 +14,21 @@ Install Python dependencies from the repository root:
 ```powershell
 python -m pip install -r requirements.txt
 ```
+
+Build the native extension before running Godot or the test suite. The validated
+Windows toolchain is CMake 3.28.2 and MinGW GCC 13.2.0. CMake 3.25 or newer and a
+C++17 compiler are required; put `g++` and `mingw32-make` on `PATH` for this generator:
+
+```powershell
+cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build/native --parallel 4
+```
+
+The first configure downloads the pinned, checksum-verified godot-cpp dependency.
+The DLL is written to ignored `sim/native/bin/cadence_kinematics.dll`; native
+binaries and build caches are not committed. Rebuild after editing native source,
+then restart Godot. See [native build](docs/native-build.md) for dependency,
+precision, and offline-build details.
 
 Use the Godot console executable on Windows. Set its actual path for the current
 PowerShell session; no persistent environment changes are required:
@@ -43,6 +58,9 @@ into real Godot physics before checking 13 rays with a 1 mm distance tolerance.
 The robot compiler writes `sim/generated/robots/a100.json`. Milestone 2 tests compile
 fresh robot configurations and run headless motion checks, including the 1 m/s for
 2 s acceptance case, acceleration ramps, and bit-identical batch/single execution.
+The tests require the C++ extension and check that its native class is loaded;
+there is no script fallback. Isolated loader tests cover a fresh project without
+editor import caches and a missing DLL.
 
 To run only the robot compiler and Milestone 2 tests:
 

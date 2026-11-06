@@ -69,6 +69,7 @@ class Milestone2Tests(unittest.TestCase):
     transcript = result.stdout + result.stderr
     self.assertEqual(result.returncode, expected_status, transcript)
     self.assertNotIn("SCRIPT ERROR", transcript)
+    self.assertIn("NATIVE_KINEMATICS: CadenceKinematics", transcript)
     if expected_status == 0 and not any(item.get("invalid") for item in cases):
       self.assertNotIn("ERROR:", transcript)
     if expected_status == 0:
@@ -134,9 +135,28 @@ class Milestone2Tests(unittest.TestCase):
     cases = [case("zero_dt", [0, 0, 0], [0, 0], [0, 0], 0, 1, [], []),
              case("negative_dt", [0, 0, 0], [0, 0], [0, 0], -0.1, 1, [], []),
              case("short_state", [0, 0], [0, 0], [0, 0], 0.1, 1, [], []),
-             case("short_velocity", [0, 0, 0], [], [0, 0], 0.1, 1, [], [])]
+             case("short_velocity", [0, 0, 0], [], [0, 0], 0.1, 1, [], []),
+             case("short_command", [0, 0, 0], [0, 0], [], 0.1, 1, [], [])]
     for item in cases:
       item["invalid"] = True
+    self._run(cases)
+  def test_native_boundary_rejects_nonfinite_inputs_and_invalid_limits(self):
+    mutations = [{"nonfinite_dt": True}]
+    mutations += [{"nonfinite_buffer": buffer, "nonfinite_value": value}
+                  for buffer in ["states", "velocities", "commands"] for value in ["nan", "inf"]]
+    mutations += [{"remove_limit": "min_linear_velocity"},
+                  {"limit_overrides": {"max_linear_acceleration": True}},
+                  {"limit_overrides": {"max_angular_velocity": "1"}},
+                  {"limit_overrides": {"max_linear_acceleration": 0}},
+                  {"limit_overrides": {"max_angular_acceleration": -1}},
+                  {"limit_overrides": {"min_linear_velocity": 1}},
+                  {"limit_overrides": {"min_angular_velocity": 2}},
+                  {"nonfinite_limit": "max_angular_acceleration"}]
+    cases = []
+    for index, mutation in enumerate(mutations):
+      item = case(f"native_invalid_{index}", [0, 0, 0], [0, 0], [0, 0], 0.1, 1, [], [])
+      item.update(mutation, invalid=True)
+      cases.append(item)
     self._run(cases)
   def test_failed_expectation_exits_nonzero(self):
     self._run([case("wrong_expectation", [0, 0, 0], [0, 0], [1, 0], 1, 1,
