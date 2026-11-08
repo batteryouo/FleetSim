@@ -1,6 +1,24 @@
 version: 1
 id: synthetic_ward
 walls:
+- id: utility_outer
+  center: [14.2, 0]
+  size: [4.4, 0.2]
+  yaw: 1.5707963267948966
+  z_min: 0
+  z_max: 2.5
+- id: utility_north
+  center: [13.1, 2.1]
+  size: [2.4, 0.2]
+  yaw: 0
+  z_min: 0
+  z_max: 2.5
+- id: utility_south
+  center: [13.1, -2.1]
+  size: [2.4, 0.2]
+  yaw: 0
+  z_min: 0
+  z_max: 2.5
 - id: west
   center:
   - -0.1

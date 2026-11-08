@@ -70,8 +70,10 @@ may coincide; separate sides allow differing per-room depths. A single generated
 door splits each front wall, giving five box primitives per room.
 
 Room annotations use the explicit room ID and an interior center `nav_point`.
-Generated doors use `<room>_door`, own that room, and share its interior nav_point;
-the door's `center` remains the actual gap center. Overrides do not change IDs.
+Generated doors use `<room>_door`, own that room, and use the actual gap center
+for both `center` and `nav_point`. Each generated door is therefore a distinct
+navigation target whose opening is checked for free space. Explicit doors keep
+their authored nav_point. Overrides do not change IDs.
 No furniture or bathroom interiors are inferred.
 
 ## Annotations and spawn regions
@@ -126,8 +128,10 @@ This block stays in YAML and does not affect compilation.
 
 The validator reads footprint radius and body height from the robot spec. A100
 has radius 0.27 m and body interval [0, 0.25] m; these are not provisional.
-The geometry helper uses half the diagonal for rectangular robot footprints and
-the maximum vertex radius for polygons; the current robot compiler accepts circles.
+The current robot schema and validator support circular footprints only. When
+non-circular robot footprints are added, their validation radius must be the
+circumscribed radius: half the diagonal for rectangles, or the maximum distance
+from the robot origin to a polygon vertex. Those branches are not implemented yet.
 
 Shapely is confined to tooling/tests and pinned to 2.1.2. Compile-path modules do
 not import it. The validator converts every box intersecting the closed robot
@@ -141,6 +145,16 @@ nav_points must lie in the same free-space polygon. Zones are not collected as
 navigation points and cannot serve as targets. A handrail entirely above the
 robot body is omitted; lowering the same obstacle into the body interval blocks
 motion. No robot dimensions are hard-coded into validation.
+
+All unbuffered map primitives, including those above the robot body, must fit
+inside the validation bounds. The start's connected free-space polygon must not
+touch the bounds boundary: such contact indicates an open perimeter that could
+allow false routes through the surrounding exterior. Disconnected exterior
+free-space polygons may touch the boundary. Real open entrances require an
+explicitly closed validation perimeter before this check can establish indoor
+connectivity. The synthetic utility area includes enclosing walls for this reason.
+Semantic `point` coordinates may differ from their reachable `nav_point`; only
+the latter is used for navigation validation.
 
 Effective door clear width is measured on UNBUFFERED geometry: intersect the
 door's centerline span with height-relevant walls/obstacles, subtract those
