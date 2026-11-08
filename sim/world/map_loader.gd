@@ -80,6 +80,8 @@ func _valid_map(data: Variant) -> bool:
       return false
     if primitive["z_max"] <= primitive["z_min"]:
       return false
+    if primitive.has("estimated") and not primitive["estimated"] is bool:
+      return false
   if not data.get("annotations") is Array:
     return false
   var rooms := {}

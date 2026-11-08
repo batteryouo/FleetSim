@@ -3,7 +3,8 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from tools.benchmark_m3 import aggregate, fixture_output, run_group, write_json
+from tools.benchmark_m3 import aggregate, run_group, write_json
+from tools.paths import fixture_output
 from tools.m3_fixtures import stress_map
 
 def main():

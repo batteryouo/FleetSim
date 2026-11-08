@@ -192,6 +192,8 @@ $defs:
       yaw: *id004
       z_min: *id004
       z_max: *id004
+      estimated:
+        type: boolean
   door:
     type: object
     additionalProperties: false

@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 from assets.build import compile_map, UniqueKeyLoader
 from assets.map_geometry import point
-from tools.benchmark_m3 import fixture_output
+from tools.paths import fixture_output
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument("source", type=Path)

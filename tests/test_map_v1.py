@@ -80,6 +80,17 @@ class MapV1Tests(unittest.TestCase):
     bad["doors"].append(dict(bad["doors"][0], id="other", offset=1.5))
     with self.assertRaises(ValueError):
       self.compile(bad)
+  def test_optional_wall_estimated_survives_door_subtraction(self):
+    for value in [True, False]:
+      spec = self.plain()
+      spec["walls"][0]["estimated"] = value
+      self.assertTrue(all(p["estimated"] is value for p in self.compile(spec)["primitives"]))
+    self.assertTrue(all("estimated" not in p for p in self.compile(self.plain())["primitives"]))
+    for value in [None, 0, 1, "true", [], {}]:
+      spec = self.plain()
+      spec["walls"][0]["estimated"] = value
+      with self.subTest(value=value), self.assertRaises(ValueError):
+        self.compile(spec)
   def test_recursive_required_unknown_and_nonfinite_fields(self):
     spec = row_spec()
     spec["annotations"] = self.plain()["annotations"]
@@ -142,6 +153,8 @@ class MapV1Tests(unittest.TestCase):
         self.compile(bad)
   def test_loader_annotations_acceptance_and_rejection(self):
     data = self.compile(self.plain())
+    data["primitives"][0]["estimated"] = True
+    data["primitives"][1]["estimated"] = False
     data["annotations"].append(
       dict(id="zone", kind="zone", label="Spawn", center=[2, 2], size=[1, 1], yaw=0)
     )
@@ -149,6 +162,10 @@ class MapV1Tests(unittest.TestCase):
     valid.write_text(json.dumps(data))
     paths = []
     invalid = []
+    for value in [None, 0, 1, "true", [], {}]:
+      bad = copy.deepcopy(data)
+      bad["primitives"][1]["estimated"] = value
+      invalid.append(bad)
     for index, annotation in enumerate(data["annotations"]):
       for key, value in annotation.items():
         bad = copy.deepcopy(data)

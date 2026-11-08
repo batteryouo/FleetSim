@@ -20,6 +20,8 @@ and `annotations`. Each primitive is a box with `id`, `type: box`, two-component
 `center`, positive two-component `size`, `yaw`, `z_min`, and `z_max`.
 Height endpoints are copied without arithmetic and are authoritative.
 Obstacle primitives additionally carry `kind` and `lidar_transparent`.
+Wall primitives may additionally carry boolean `estimated`, copied from the
+source wall and retained on every segment after door subtraction.
 Reference paths, calibration, catalog references, validation settings, high-level
 room rows, and source paths are never embedded. Output order is deterministic.
 
@@ -27,7 +29,13 @@ room rows, and source paths are never embedded. Output order is deterministic.
 
 A wall has `id`, `center: [x, y]`, `size: [length, thickness]`, `yaw`, `z_min`,
 and `z_max`. Sizes are positive, and `z_max > z_min`. Yaw rotates the local x/y
-axes counterclockwise around +z. This wall representation is unchanged from v0.
+axes counterclockwise around +z. These geometric fields are unchanged from v0.
+Optional boolean `estimated` records whether a wall is an estimated proxy.
+`true` marks approximate geometry, including inferred thickness or heights;
+`false` is an explicit author assertion that the wall is not an estimated proxy.
+Omitting the field leaves that status unspecified and does not imply measurement.
+The compiler preserves the flag without inserting a default, and the world loader
+rejects non-boolean values. It is metadata and does not alter physics or sensing.
 
 An explicit source door has `id`, `room`, `wall`, `offset`, `width`, and
 `nav_point`. The owning `room` must name a point annotation. `offset` is a signed

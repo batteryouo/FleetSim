@@ -21,6 +21,7 @@ from tools.plan_extract import (
   read_yaml,
   write_map,
   pdf_paths,
+  main,
 )
 from tools.validate_map import validate_geometry
 
@@ -124,9 +125,7 @@ class PlanExtractionTests(unittest.TestCase):
     samples = curve_points(curve, 8)
     self.assertEqual(samples[0], curve[0])
     self.assertEqual(samples[-1], curve[-1])
-    curved = dict(
-      id="arch", layer="STRUCTURE", width=0.2, segments=[], curves=[curve], closed=False
-    )
+    curved = dict(id="arch", layer="STRUCTURE", width=0.2, segments=[], curves=[curve])
     curved_spec, _ = extract(self.paths + [curved], self.config, self.overrides)
     self.assertEqual(len([p for p in curved_spec["walls"] if p["id"].startswith("arch_")]), 8)
     overrides = dict(
@@ -226,7 +225,7 @@ class PlanExtractionTests(unittest.TestCase):
       paths = pdf_paths(source, 0)
       self.assertEqual(paths[0]["layer"], "STRUCTURE")
       self.assertEqual(paths[0]["segments"][-1], [[6, 5], [5, 5]])
-      self.assertFalse(paths[0]["closed"])
+      self.assertNotIn("closed", paths[0])
       self.assertEqual(len(paths[1]["segments"]), 8)
       self.assertEqual(paths[1]["curves"], self.paths[4]["curves"])
       with self.assertRaisesRegex(ValueError, "out of range"):
@@ -242,3 +241,36 @@ class PlanExtractionTests(unittest.TestCase):
     overrides.write_text(yaml.safe_dump(self.overrides))
     with self.assertRaisesRegex(ValueError, "hash"):
       write_map(source, config, overrides, self.directory / "out.yaml")
+  def test_hairline_and_manual_proxies_are_marked_estimated(self):
+    paths = copy.deepcopy(self.paths)
+    for path in paths:
+      path["width"] = 0
+    overrides = dict(
+      self.overrides,
+      walls=[dict(id="repair", start=[0, 1], end=[0, 2], width=0.4, z_min=0.7, z_max=0.9)],
+    )
+    spec, _ = extract(paths, self.config, overrides)
+    self.assertTrue(all(wall["estimated"] is True for wall in spec["walls"]))
+    for wall in spec["walls"]:
+      if wall["id"] != "repair":
+        self.assertEqual(wall["size"][1], 0.1)
+        self.assertEqual([wall["z_min"], wall["z_max"]], [0, 2.5])
+    repair = next(wall for wall in spec["walls"] if wall["id"] == "repair")
+    self.assertEqual([repair["z_min"], repair["z_max"]], [0.7, 0.9])
+    self.assertTrue(all(p["estimated"] is True for p in self.compiled(spec)["primitives"]))
+  def test_unexpected_missing_internal_key_is_not_hidden(self):
+    argv = [
+      "plan_extract",
+      "missing.pdf",
+      "--config",
+      "config.yaml",
+      "--overrides",
+      "overrides.yaml",
+      "--output",
+      str(self.directory / "out.yaml"),
+    ]
+    with patch("sys.argv", argv), patch(
+      "tools.plan_extract.write_map", side_effect=KeyError("seqno")
+    ):
+      with self.assertRaisesRegex(KeyError, "seqno"):
+        main()

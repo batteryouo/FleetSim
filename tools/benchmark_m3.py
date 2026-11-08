@@ -8,13 +8,13 @@ import platform
 import shutil
 import statistics
 import subprocess
-import tempfile
 import time
 
 import psutil
 
 from assets.build import ROOT
 from tools.m3_fixtures import poses, robot_spec, stress_map
+from tools.paths import fixture_output
 
 COUNTS = [1, 2, 5, 10, 20, 40]
 BEAMS = [360, 400, 720]
@@ -36,11 +36,6 @@ def parallel_counts(cores):
     values.append(count)
     count *= 2
   return sorted(set(values + [cores]))
-def fixture_output(path):
-  path = Path(path).resolve()
-  if not any(path.is_relative_to(root.resolve()) for root in [ROOT / "tmp", Path(tempfile.gettempdir())]):
-    raise ValueError("Benchmark fixtures and exports must stay under tmp/ or the OS temporary directory")
-  return path
 def summary(values):
   return {"median": statistics.median(values), "min": min(values), "max": max(values)}
 def cpu_model():

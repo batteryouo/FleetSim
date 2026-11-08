@@ -48,6 +48,11 @@ review the inventory and manual choices before updating the hash.
 ## Geometry and doors
 
 The PDF adapter normalizes line, rectangle, quadrilateral, and cubic path items.
+Rectangle and quadrilateral items explicitly supply their closed contours.
+For a drawing with multiple subpaths, the drawing-level `closePath` flag closes
+only the final subpath. Earlier unclosed subpaths remain open; the adapter does
+not infer missing earlier closures from that one flag. Normalized paths contain
+explicit segments/curves and have no separate `closed` flag.
 The selected wall-layer paths become narrow rectangular surface proxies, clipped
 to the crop. Curves become a configurable number of short straight segments.
 Widths are the maximum of the PDF stroke width and configured minimum, scaled
@@ -55,6 +60,15 @@ to meters. Separate contour faces can remain separate primitives. Filled areas
 are represented by their contours, not reconstructed solid wall volumes.
 This is a first-draft geometric proxy: it preserves drawn boundaries and gaps,
 but it is not a wall-thickness reconstruction or a general CAD importer.
+
+Every emitted wall, including manual repairs and virtual door jambs, carries
+`estimated: true`. The compiler retains it on compiled wall primitives, and
+the loader validates it as a boolean. The marker records that stroke thickness
+and configured heights are proxy assumptions, not structural measurements.
+For a hairline export with zero stroke widths, all extracted contour widths
+fall back to `line_width * meters_per_unit`; this does not recover distinct
+structural wall thicknesses. Confirmed dimensions require separate authoring or
+reconstruction before removing the estimate marker.
 
 Door layers supply candidate openings rather than blocking geometry. A candidate
 must have a quarter-circle cubic swing with matching endpoint radii and a nearby
@@ -113,6 +127,8 @@ python -m tools.validate_map tmp/plan.yaml
 ```
 
 All extractor outputs must be in tmp/ or OS temporary storage. Output paths must
+pass the shared guard in `tools/paths.py`. The benchmark module re-exports the
+same `fixture_output` function for existing callers. Output paths must also
 be distinct from inputs and from one another. The output map is checked by the
 map compiler before replacing its contents; invalid inputs preserve an existing
 map. Its robot path is resolved to an absolute path for local validation, but
@@ -123,6 +139,8 @@ paths, scale, or extraction metadata.
 renders the actual PDF crop with blue geometry, green doors, and red navigation
 points. Missing PDFs, missing layers, stale path/candidate IDs, invalid page
 indices, and mismatched source hashes fail with a diagnostic and nonzero exit.
+Unexpected internal missing-key errors retain their traceback rather than being
+reported as input-validation failures.
 
 Run `python -m unittest discover -s tests` with GODOT_BIN set for the complete
 suite, including earlier milestones. Linux extraction/native-lidar validation

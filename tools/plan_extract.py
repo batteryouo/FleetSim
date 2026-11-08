@@ -13,7 +13,7 @@ from shapely.geometry import LineString, box
 
 from assets.build import ROOT, UniqueKeyLoader, _check_finite, compile_map
 from assets.map_geometry import point
-from tools.benchmark_m3 import fixture_output
+from tools.paths import fixture_output
 def read_yaml(path):
   value = yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueKeyLoader)
   _check_finite(value)
@@ -93,7 +93,6 @@ def pdf_paths(source, page_number):
           width=drawing.get("width", 0),
           segments=segments,
           curves=curves,
-          closed=False,
         )
       )
     return paths
@@ -166,7 +165,9 @@ def extract(paths, config, overrides):
     raise ValueError("Scale, line width, and curve resolution must be positive")
   origin = config["origin"]
   yaw = config["yaw"]
-  transform = lambda p: point([0, 0], yaw, (p[0] - origin[0]) * scale, (origin[1] - p[1]) * scale)
+  def transform(p):
+    return point([0, 0], yaw, (p[0] - origin[0]) * scale, (origin[1] - p[1]) * scale)
+
   roi = box(*config["crop"])
   exclusions = [box(*r) for r in overrides.get("exclude_regions", [])]
   walls = []
@@ -181,8 +182,6 @@ def extract(paths, config, overrides):
     for curve in path["curves"]:
       samples = curve_points(curve, config["curve_subdivisions"])
       segments.extend(zip(samples, samples[1:]))
-    if path["closed"] and segments and math.dist(segments[-1][1], segments[0][0]) > 1e-6:
-      segments.append([segments[-1][1], segments[0][0]])
     for index, (a, b) in enumerate(segments):
       if math.dist(a, b) < 1e-8:
         continue
@@ -208,6 +207,7 @@ def extract(paths, config, overrides):
             yaw=math.atan2(end[1] - start[1], end[0] - start[0]),
             z_min=config["z_min"],
             z_max=config["z_max"],
+            estimated=True,
           )
         )
   for wall in overrides.get("walls", []):
@@ -220,6 +220,7 @@ def extract(paths, config, overrides):
         yaw=math.atan2(b[1] - a[1], b[0] - a[0]),
         z_min=wall.get("z_min", config["z_min"]),
         z_max=wall.get("z_max", config["z_max"]),
+        estimated=True,
       )
     )
   annotations = [
@@ -258,6 +259,7 @@ def extract(paths, config, overrides):
         yaw=angle,
         z_min=config["z_min"],
         z_max=config["z_max"],
+        estimated=True,
       )
     )
     doors.append(
@@ -383,7 +385,7 @@ def main():
       f"Extracted {report['walls']} walls; {len(report['door_candidates'])} door candidates"
     )
     return 0
-  except (OSError, ValueError, KeyError, ImportError) as error:
+  except (OSError, ValueError, ImportError) as error:
     print(f"Extraction failed: {error}")
     return 1
 
