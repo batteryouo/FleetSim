@@ -218,8 +218,11 @@ compile and test commands. Milestone 3 stage 1 provides snapshot-driven Jolt 3D
 lidar queries through C++ GDExtension, with headless geometry, lifecycle, and
 repeatability tests and an exported-release throughput and peak-memory benchmark.
 The 2D query runtime is removed following confirmation of the selection in
-`docs/benchmark-m3.md`. Ward 73, stage 2, robot collision handling, noise, and
-agent transport remain outside this implementation.
+`docs/benchmark-m3.md`. Layered source-plan extraction now produces local draft
+maps with explicit overrides and PDF overlays; see `docs/plan-extraction.md`.
+Generated site maps and manual site overrides remain under ignored tmp/.
+Stage 2, robot collision handling, noise, and agent transport remain outside
+this implementation.
 
 ## Open Questions
 

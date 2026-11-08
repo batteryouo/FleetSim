@@ -1,0 +1,25 @@
+{
+  "paths": [
+    {"id":"outline","layer":"STRUCTURE","width":0.2,"segments":[[[0,0],[10,0]],[[10,0],[10,10]],[[10,10],[0,10]],[[0,10],[0,0]]],"curves":[],"closed":false},
+    {"id":"partition_a","layer":"STRUCTURE","width":0.2,"segments":[[[5,0],[5,4]]],"curves":[],"closed":false},
+    {"id":"partition_b","layer":"STRUCTURE","width":0.2,"segments":[[[5,6],[5,10]]],"curves":[],"closed":false},
+    {"id":"leaf","layer":"OPENINGS","width":0.1,"segments":[[[5,4],[3,4]]],"curves":[],"closed":false},
+    {"id":"swing","layer":"OPENINGS","width":0.1,"segments":[],"curves":[[[3,4],[3,5.1045695],[3.8954305,6],[5,6]]],"closed":false},
+    {"id":"furniture","layer":"DECORATION","width":1,"segments":[[[0,5],[10,5]]],"curves":[],"closed":false}
+  ],
+  "config": {
+    "id":"layered_example","page":0,"meters_per_unit":0.5,"origin":[0,10],"yaw":0,
+    "crop":[-1,-1,11,11],"wall_layers":["STRUCTURE"],"door_layers":["OPENINGS"],
+    "line_width":0.2,"curve_subdivisions":8,"door_tolerance":0.01,
+    "z_min":0,"z_max":2.5,"robot":"a100.yaml","clearance":0.05
+  },
+  "overrides": {
+    "remove_paths":[],"walls":[],
+    "annotations":[
+      {"id":"left","label":"Left room","point":[2,5],"nav_point":[2,5]},
+      {"id":"right","label":"Right room","point":[8,5],"nav_point":[8,5]}
+    ],
+    "doors":[{"id":"connecting_door","room":"right","candidate":"swing_arc0"}],
+    "validation_bounds":{"center":[5,5],"size":[12,12]},"start":"left","targets":["right"]
+  }
+}

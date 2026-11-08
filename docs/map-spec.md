@@ -203,15 +203,17 @@ create no nodes; `get_annotations()` returns a deep copy. Physics boxes use
 conversion stays in `sim/bridge/`: REP-103 `(x,y,z)` maps to `(-y,z,-x)`.
 The original test-room geometry and M1 ray expectations are unchanged.
 
-## Subsequent source-plan workflow
+## Source-plan workflow
 
 When a source plan preserves CAD layer markers, a tracked extraction tool can
 filter layers and apply reference scale exactly once. Doors come from the door
-layer. Manual corrections belong in a tracked overrides file. A scale update
+layer. Manual corrections belong in an explicit overrides file. A scale update
 reruns extraction instead of migrating metric coordinates by hand. Generated
 site maps remain uncommitted for now. The tool requires a synthetic layered
-fixture so its tests do not depend on untracked input. That tool and real-site
-geometry belong to the subsequent round, not this implementation.
+fixture so its tests do not depend on untracked input. The extraction tool is
+implemented in `tools/plan_extract.py`; see `docs/plan-extraction.md` for its
+source-unit config, overrides, surface-proxy limitations, and PDF overlays.
+Real-site overrides are currently local under tmp/ alongside generated maps.
 
 ## Milestone 1 acceptance
 

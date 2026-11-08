@@ -5,7 +5,8 @@ YAML map compiler, a minimal Godot world, and headless physics ray-distance chec
 Milestone 2 adds a robot spec compiler and batched float64 differential-drive
 kinematics implemented in a C++ GDExtension. Milestone 3 stage 1 adds batched lidar
 queries implemented in the C++ GDExtension using Jolt 3D, with an exported-release benchmark.
-Robot collision handling, noise, agent transport, and Ward 73 modeling remain later work.
+Layered source-plan tooling produces local ward drafts and PDF overlays.
+Robot collision handling, noise, and agent transport remain later work.
 
 ## Setup
 
@@ -26,6 +27,17 @@ Install Python dependencies from the repository root in a Python environment:
 ```powershell
 python -m pip install -r requirements.txt
 ```
+
+For source-plan extraction and the complete test suite, also install:
+
+```powershell
+python -m pip install -r requirements-extraction.txt
+```
+
+The extractor's PDF and plotting packages are tooling dependencies. See
+[layered plan extraction](docs/plan-extraction.md) for configuration, synthetic
+tests, and commands to generate YAML, compile JSON, validate connectivity, and
+render an overlay. Real-site input and output files remain under ignored `tmp/`.
 
 Build the native extension before running Godot or the test suite. CMake 3.25 or
 newer and a C++17 compiler are required. On Windows, put `g++` and `mingw32-make`

@@ -1,0 +1,160 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Layered plan extraction inputs
+$defs:
+  config:
+    type: object
+    additionalProperties: false
+    properties:
+      id: &id005
+        type: string
+        pattern: ^[A-Za-z][A-Za-z0-9_]*$
+      page:
+        type: integer
+        minimum: 0
+      meters_per_unit: &id003
+        type: number
+        exclusiveMinimum: 0
+      origin: &id007
+        type: array
+        items: &id001
+          type: number
+        minItems: 2
+        maxItems: 2
+      yaw: *id001
+      crop: &id006
+        type: array
+        items: *id001
+        minItems: 4
+        maxItems: 4
+      wall_layers: &id002
+        type: array
+        items: &id004
+          type: string
+          minLength: 1
+        minItems: 1
+        uniqueItems: true
+      door_layers: *id002
+      line_width: *id003
+      curve_subdivisions:
+        type: integer
+        minimum: 2
+        maximum: 256
+      door_tolerance: *id003
+      z_min: *id001
+      z_max: *id001
+      robot: *id004
+      clearance:
+        type: number
+        minimum: 0
+      source_sha256:
+        type: string
+        pattern: ^[0-9a-f]{64}$
+    required:
+    - id
+    - page
+    - meters_per_unit
+    - origin
+    - yaw
+    - crop
+    - wall_layers
+    - door_layers
+    - line_width
+    - curve_subdivisions
+    - door_tolerance
+    - z_min
+    - z_max
+    - robot
+    - clearance
+  overrides:
+    type: object
+    additionalProperties: false
+    properties:
+      remove_paths:
+        type: array
+        items: *id005
+        uniqueItems: true
+      exclude_regions:
+        type: array
+        items: *id006
+        minItems: 0
+      walls:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            id: *id005
+            start: *id007
+            end: *id007
+            width: *id003
+            z_min:
+              type: number
+            z_max:
+              type: number
+          required:
+          - id
+          - start
+          - end
+          - width
+        minItems: 0
+      annotations:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            id: *id005
+            label: *id004
+            point: *id007
+            nav_point: *id007
+          required:
+          - id
+          - label
+          - point
+          - nav_point
+        minItems: 1
+      doors:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            id: *id005
+            room: *id005
+            candidate: *id005
+            alternate:
+              type: boolean
+          required:
+          - id
+          - room
+          - candidate
+        minItems: 0
+      validation_bounds:
+        type: object
+        additionalProperties: false
+        properties:
+          center: *id007
+          size:
+            type: array
+            items: *id003
+            minItems: 2
+            maxItems: 2
+        required:
+        - center
+        - size
+      start: *id005
+      targets:
+        type: array
+        items: *id005
+        minItems: 1
+        uniqueItems: true
+      notes:
+        type: array
+        items: *id004
+        minItems: 0
+    required:
+    - annotations
+    - doors
+    - validation_bounds
+    - start
+    - targets
