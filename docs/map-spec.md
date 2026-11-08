@@ -196,7 +196,7 @@ Matplotlib 3.8.2 is an optional preview dependency, separate from compilation.
 ```powershell
 python -m assets.build spec/maps/synthetic_ward.yaml
 python -m tools.validate_map spec/maps/synthetic_ward.yaml
-python -m tools.preview_map spec/maps/synthetic_ward.yaml --output tmp/synthetic_ward.png
+python -m tools.preview_map spec/maps/synthetic_ward.yaml --output tmp/previews/synthetic_ward.png
 python -m unittest discover -s tests
 ```
 

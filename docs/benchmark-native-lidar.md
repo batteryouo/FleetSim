@@ -47,7 +47,7 @@ run:
 ```powershell
 cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DGODOTCPP_TARGET=template_release
 cmake --build build/native --parallel 4
-python -m tools.benchmark_m3 --release-template C:/path/to/windows_release_x86_64.exe --output tmp/baseline-export --smoke --seconds .3
+python -m tools.benchmark_m3 --release-template C:/path/to/windows_release_x86_64.exe --output tmp/benchmarks/baseline-export --smoke --seconds .3
 ```
 
 In the current checkout, build and validate the candidate:
@@ -56,8 +56,8 @@ In the current checkout, build and validate the candidate:
 cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DGODOTCPP_TARGET=template_release
 cmake --build build/native --parallel 4
 python -m unittest discover -s tests -v
-python -m tools.benchmark_m3 --release-template C:/path/to/windows_release_x86_64.exe --output tmp/candidate-export --smoke --seconds .3
-python -m tools.compare_lidar --baseline C:/path/to/baseline-checkout/tmp/baseline-export/benchmark.exe --candidate tmp/candidate-export/benchmark.exe --output tmp/lidar-comparison
+python -m tools.benchmark_m3 --release-template C:/path/to/windows_release_x86_64.exe --output tmp/benchmarks/candidate-export --smoke --seconds .3
+python -m tools.compare_lidar --baseline C:/path/to/baseline-checkout/tmp/benchmarks/baseline-export/benchmark.exe --candidate tmp/benchmarks/candidate-export/benchmark.exe --output tmp/benchmarks/lidar-comparison
 ```
 
 Set GODOT_BIN as in README. Keep each executable beside its original `.pck` and
@@ -69,11 +69,11 @@ release mode, scan counts, a positive finite-range checksum, and the candidate's
 The exact comparison invocation for the recorded run was:
 
 ```powershell
-python -m tools.compare_lidar --baseline tmp/m3-jolt-selected-smoke/benchmark.exe --candidate tmp/m3-native-lidar-final/benchmark.exe --output tmp/m3-native-lidar-final-comparison
+python -m tools.compare_lidar --baseline tmp/benchmarks/m3/m3-jolt-selected-smoke/benchmark.exe --candidate tmp/benchmarks/m3/m3-native-lidar-final/benchmark.exe --output tmp/benchmarks/m3/m3-native-lidar-final-comparison
 ```
 
 Raw worker results, hashes, and peak memory samples are in ignored
-`tmp/m3-native-lidar-final-comparison/results.json`. Artifacts are not committed.
+`tmp/benchmarks/m3/m3-native-lidar-final-comparison/results.json`. Artifacts are not committed.
 
 ## Artifact fingerprints
 

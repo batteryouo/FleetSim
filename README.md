@@ -74,7 +74,7 @@ rerun with the expanded map suite and this new dependency.
 python -m assets.build spec/maps/synthetic_ward.yaml
 python -m tools.validate_map spec/maps/synthetic_ward.yaml
 python -m pip install matplotlib==3.8.2
-python -m tools.preview_map spec/maps/synthetic_ward.yaml --output tmp/synthetic_ward.png
+python -m tools.preview_map spec/maps/synthetic_ward.yaml --output tmp/previews/synthetic_ward.png
 ```
 
 Matplotlib is needed only for PNG previews. Missing local reference images are
@@ -142,8 +142,8 @@ for full runs. `tools.report_m3` renders archived two-backend results only.
 To run only the headless ray check against the generated map:
 
 ```powershell
-New-Item -ItemType Directory -Force tmp | Out-Null
-& $env:GODOT_BIN --headless --path sim --log-file (Join-Path $PWD 'tmp/milestone1.log') --script res://tests/ray_distance_test.gd -- --map res://generated/test_room.json
+New-Item -ItemType Directory -Force tmp/logs | Out-Null
+& $env:GODOT_BIN --headless --path sim --log-file (Join-Path $PWD 'tmp/logs/milestone1.log') --script res://tests/ray_distance_test.gd -- --map res://generated/test_room.json
 ```
 
 Success prints `MILESTONE_1_PASS: 13 rays` and exits with status 0. To inspect the

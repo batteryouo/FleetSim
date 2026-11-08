@@ -188,8 +188,8 @@ cmake -S native -B build/native -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release 
 cmake --build build/native --parallel 4
 python -m assets.build_robot spec/robots/a100.yaml
 python -m unittest discover -s tests -v
-python -m tools.benchmark_m3 --release-template tmp/tools/templates/windows_release_x86_64.exe --output tmp/m3-results-20261107
-python -m tools.report_m3 tmp/m3-results-20261107/results.json
+python -m tools.benchmark_m3 --release-template tmp/tools/templates/windows_release_x86_64.exe --output tmp/benchmarks/m3/m3-results-20261107
+python -m tools.report_m3 tmp/benchmarks/m3/m3-results-20261107/results.json
 ```
 
 Set GODOT_BIN to the Godot console/editor executable, as in README. The exact
@@ -206,7 +206,7 @@ VmHWM measurement path are supplied but remain unvalidated for M3. Installed
 templates can be used by omitting --release-template. A smoke export can be
 checked with --smoke --seconds 0.3; smoke results are rejected by the report renderer.
 
-Local raw results: `tmp/m3-results-20261107/results.json`. This includes every
+Local raw results: `tmp/benchmarks/m3/m3-results-20261107/results.json`. This includes every
 worker's config, log, output and OS peak bytes in aggregate JSON. Fixtures,
 staged exports, native binaries, and raw benchmark JSON are ignored by Git.
 
