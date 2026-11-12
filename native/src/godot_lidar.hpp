@@ -18,7 +18,7 @@ class CadenceLidar : public godot::RefCounted {
   std::vector<godot::Ref<godot::Shape3D>> shapes_;
   godot::Ref<godot::Shape3D> robot_shape_;
   std::vector<double> cosines_, sines_;
-  double mount_x_ = 0, mount_y_ = 0, mount_z_ = 0, body_z_ = 0;
+  double mount_x_ = 0, mount_y_ = 0, mount_z_ = 0, body_z_ = 0, center_x_ = 0, center_y_ = 0;
   double angle_min_ = 0, angle_max_ = 0, increment_ = 0, range_min_ = 0, range_max_ = 0;
   godot::RID create_body(godot::RID shape, const godot::Transform3D &transform);
 protected:

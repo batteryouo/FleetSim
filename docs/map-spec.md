@@ -134,12 +134,16 @@ Optional `validation` requires `robot` (robot YAML path relative to the map),
 defaults to `DEFAULT_CLEARANCE = 0.05` m in `tools/validate_map.py`.
 This block stays in YAML and does not affect compilation.
 
-The validator reads footprint radius and body height from the robot spec. A100
-has radius 0.27 m and body interval [0, 0.25] m; these are not provisional.
-The current robot schema and validator support circular footprints only. When
-non-circular robot footprints are added, their validation radius must be the
-circumscribed radius: half the diagonal for rectangles, or the maximum distance
-from the robot origin to a polygon vertex. Those branches are not implemented yet.
+The validator reads the footprint and body height from the robot spec. Its
+validation radius is the circumscribed radius about the robot origin, so a robot
+may turn in place anywhere it is validated. For a circle this is the radius plus
+the distance of the circle's centre from the origin. The A100 has radius 0.27 m
+centred 0.068 m ahead of the axle, a validation radius of 0.338 m, and body
+interval [0, 0.25] m; these are not provisional.
+The current robot schema and validator support circular footprints only. For
+non-circular footprints added later, the validation radius is half the diagonal
+for rectangles, or the maximum distance from the robot origin to a polygon vertex.
+Those branches are not implemented yet.
 
 Shapely is confined to tooling/tests and pinned to 2.1.2. Compile-path modules do
 not import it. The validator converts every box intersecting the closed robot

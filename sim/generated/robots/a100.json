@@ -1,9 +1,13 @@
 {
-  "version": 0,
+  "version": 1,
   "id": "a100",
   "footprint": {
     "type": "circle",
-    "radius": 0.27
+    "radius": 0.27,
+    "center": {
+      "x": 0.068,
+      "y": 0.0
+    }
   },
   "body": {
     "z_min": 0.0,

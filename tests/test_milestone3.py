@@ -39,7 +39,10 @@ def stress_range(layout, positions, robot_index, beam, robot):
     for index in range(len(positions) // 3):
       if index == robot_index:
         continue
-      dx, dy = origin[0] - positions[3 * index], origin[1] - positions[3 * index + 1]
+      center = robot["footprint"]["center"]
+      other_yaw = positions[3 * index + 2]
+      dx = origin[0] - positions[3 * index] - math.cos(other_yaw) * center["x"] + math.sin(other_yaw) * center["y"]
+      dy = origin[1] - positions[3 * index + 1] - math.sin(other_yaw) * center["x"] - math.cos(other_yaw) * center["y"]
       projection = dx * direction[0] + dy * direction[1]
       offset = dx * dx + dy * dy - robot["footprint"]["radius"] ** 2
       discriminant = projection * projection - offset
@@ -61,6 +64,7 @@ class Milestone3Tests(unittest.TestCase):
     self.directory = Path(self.workspace.name)
   def _case(self, label, walls, positions, expected, **lidar):
     robot = robot_spec()
+    robot["footprint"]["center"] = {"x": 0.0, "y": 0.0}
     robot["lidar"].update(beam_count=3, angle_min=-math.pi / 2, angle_max=math.pi / 2)
     robot["lidar"].update(lidar)
     return {"label": label, "map": compiled(self.directory, walls), "robot": robot,
@@ -102,6 +106,18 @@ class Milestone3Tests(unittest.TestCase):
                               "expected": [["+inf", 2.53, "+inf"], ["+inf", 2.53, "+inf"]]})
     case["snapshots"].append({"ids": ["r0"], "poses": [0, 0, 0], "expected": [["+inf"] * 3]})
     self._run([case])
+  def test_footprint_center_offset_follows_robot_yaw(self):
+    # Observer mount at x 0.2; the other robot's disc centre is 0.1 m ahead of its axle along its yaw.
+    cases = []
+    for label, pose, expected in [("toward", [3, 0, math.pi], 2.43), ("away", [3, 0, 0], 2.63),
+                                  ("sideways", [3, 0, math.pi / 2], 2.8 - math.sqrt(.27 ** 2 - .1 ** 2))]:
+      case = self._case(label, [], [0, 0, 0] + pose,
+                        [["+inf", expected, "+inf"], ["+inf", "+inf", "+inf"]])
+      case["robot"]["footprint"]["center"] = {"x": 0.1, "y": 0.0}
+      case["snapshots"][0].pop("expected")
+      case["snapshots"][0]["checks"] = [{"robot": 0, "beam": 1, "range": expected}]
+      cases.append(case)
+    self._run(cases)
   def test_height_filter_closed_endpoints_and_range_sentinels(self):
     cases = []
     for label, lo, hi, distance in [("above", .216, 1, "+inf"), ("below", 0, .214, "+inf"),

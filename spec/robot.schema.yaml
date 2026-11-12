@@ -1,5 +1,5 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-title: Cadence robot spec v0
+title: Cadence robot spec v1
 type: object
 additionalProperties: false
 required:
@@ -18,20 +18,27 @@ required:
 properties:
   version:
     type: integer
-    const: 0
+    const: 1
   id:
     type: string
     pattern: '^[A-Za-z][A-Za-z0-9_]*$'
   footprint:
     type: object
     additionalProperties: false
-    required: [type, radius]
+    required: [type, radius, center]
     properties:
       type:
         const: circle
       radius:
         type: number
         exclusiveMinimum: 0
+      center:
+        type: object
+        additionalProperties: false
+        required: [x, y]
+        properties:
+          x: {type: number}
+          y: {type: number}
   body:
     type: object
     additionalProperties: false

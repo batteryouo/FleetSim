@@ -1,4 +1,4 @@
-# Robot spec v0
+# Robot spec v1
 
 ## Source contract and units
 
@@ -8,11 +8,12 @@ seconds in REP-103: x forward, y left, z up. Unknown fields at every object leve
 duplicate YAML keys, non-finite numbers, and unsupported versions are errors.
 
 ```yaml
-version: 0
+version: 1
 id: a100
 footprint:
   type: circle
   radius: 0.27
+  center: {x: 0.068, y: 0.0}
 body:
   z_min: 0.0
   z_max: 0.25
@@ -42,7 +43,10 @@ provisional:
 ```
 
 IDs start with an ASCII letter and contain only ASCII letters, digits, and
-underscores. The circle is centered on the wheel axis and has a positive radius.
+underscores. The robot's reference frame, and therefore every pose, is at the
+wheel axle midpoint. The footprint circle has a positive radius and is centred at
+`center` in that frame, so collision and other robots' lidar geometry follow the
+body rather than the axle. Version 1 added `center`; version 0 specs are rejected.
 `body` gives absolute height endpoints with `z_max > z_min`. Each minimum velocity
 must be strictly below its maximum; negative linear velocity permits reverse motion.
 Both acceleration limits must be positive.
@@ -62,7 +66,8 @@ are never copied into tracked paths. `spec/robots/a100.yaml` is authoritative.
 
 | Field | Value | Basis | Provisional |
 | --- | --- | --- | --- |
-| `footprint.radius` | 0.27 m | User-selected enclosing circle from URDF geometry: base cylinder radius 0.24 m; front box center x = 0.125 m and size 0.25 by 0.19 m give a corner radius of about 0.26744 m; caster center x = 0.2425 m plus radius 0.0175 m reaches 0.26 m. | No |
+| `footprint.radius` | 0.27 m | Rounded up from the smallest enclosing circle of the manufacturer body mesh, r 0.262 m. The mesh is placed by the URDF visual origin, including its +0.08 m offset that puts the drive wheels in the wheel arches. The URDF collision shapes omit that offset and are not used. | No |
+| `footprint.center` | (0.068, 0) m | Centre of the same enclosing circle; the body reaches 0.330 m ahead of the axle. | No |
 | `body.z_min`, `body.z_max` | 0.0, 0.25 m | Simplified body envelope: caster bottom is 0.0175 - 0.0175 = 0; the upper base cylinder reaches 0.2475 + 0.005 / 2 = 0.25 m. | No |
 | Linear velocity limits | [-1.0, 1.0] m/s | Chosen simulation action range, including reverse; not inferred from the URDF or hardware controller. | No |
 | Angular velocity limits | [-1.0, 1.0] rad/s | Chosen simulation action range; not inferred from the URDF or hardware controller. | No |
@@ -79,8 +84,9 @@ Linear and angular rate limits apply independently; this milestone does not mode
 coupled wheel acceleration constraints. Deployment may narrow actions on the inference
 side; the simulator keeps the configured action range. All six scan parameters
 are provisional because the physical lidar model is unknown. The mount comes from
-the robot geometry. The control rate remains undecided; `rate_hz` describes the
-sensor configuration and does not schedule scans or select an integration dt.
+the robot geometry. `rate_hz` describes the sensor configuration and does not
+schedule scans or select an integration dt; the World protocol sets the physics
+step and control period and scans once per control period (`docs/protocol.md`).
 
 `lidar.mount` requires four finite numeric fields. `beam_count` is an integer at
 least 2; `angle_max > angle_min`; `0 <= range_min < range_max`; `rate_hz > 0`.
@@ -223,7 +229,7 @@ The kernel updates every query-only robot body from the snapshot before issuing
 any ray, including newly added, moved, and removed robots. Static query proxies
 have collision mask zero: they do not integrate motion or resolve contacts.
 Jolt uses 3D boxes and horizontal rays at the mount z. Other robots use cylinders
-with their true footprint radius and body height interval. Each ray query
+with their true footprint radius at the footprint centre and body height interval. Each ray query
 explicitly excludes its own body's RID. Jolt shape margins are zero so proxy
 geometry matches the specified dimensions. The axis mapping is defined only in `sim/bridge/frames.gd`; its
 `basis_to_godot()` supplies the conversion basis to the C++ helpers in

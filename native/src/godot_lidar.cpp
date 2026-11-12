@@ -56,13 +56,15 @@ int CadenceLidar::configure(const Dictionary &map, const Dictionary &robot, cons
     return invalid();
   }
   const Dictionary body = robot["body"], footprint = robot["footprint"], lidar = robot["lidar"];
-  if (lidar.get("mount", Variant()).get_type() != Variant::DICTIONARY) {
+  if (lidar.get("mount", Variant()).get_type() != Variant::DICTIONARY
+      || footprint.get("center", Variant()).get_type() != Variant::DICTIONARY) {
     return invalid();
   }
-  const Dictionary mount = lidar["mount"];
+  const Dictionary mount = lidar["mount"], center = footprint["center"];
   double lo, hi, radius, mount_yaw, beam_count;
   if (!field(body, "z_min", lo) || !field(body, "z_max", hi) || hi <= lo
       || !field(footprint, "radius", radius) || radius <= 0
+      || !field(center, "x", center_x_) || !field(center, "y", center_y_)
       || !field(mount, "x", mount_x_) || !field(mount, "y", mount_y_) || !field(mount, "z", mount_z_)
       || !field(mount, "yaw", mount_yaw) || !field(lidar, "beam_count", beam_count)
       || beam_count < 2 || beam_count != std::floor(beam_count) || beam_count > std::numeric_limits<int32_t>::max()
@@ -170,7 +172,10 @@ TypedArray<Dictionary> CadenceLidar::scan_batch(const Dictionary &snapshot) {
   }
   // Static transforms are immediate for teleported query proxies; kinematic updates wait for a physics step.
   for (int64_t index = 0; index < ids.size(); ++index) {
-    const Transform3D transform(Basis(), frames::point_to_godot(frame_, state[index * 3], state[index * 3 + 1], body_z_));
+    const double c = std::cos(state[index * 3 + 2]), s = std::sin(state[index * 3 + 2]);
+    const double x = state[index * 3] + c * center_x_ - s * center_y_;
+    const double y = state[index * 3 + 1] + s * center_x_ + c * center_y_;
+    const Transform3D transform(Basis(), frames::point_to_godot(frame_, x, y, body_z_));
     if (!robots_.has(ids[index])) {
       robots_[ids[index]] = create_body(robot_shape_->get_rid(), transform);
     } else {

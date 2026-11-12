@@ -20,8 +20,9 @@ def rectangle(item):
     ]
   )
 def radius_for(footprint):
+  # Rotating in place about the robot origin sweeps the offset disc out to this radius.
   if footprint["type"] == "circle":
-    return footprint["radius"]
+    return footprint["radius"] + math.hypot(footprint["center"]["x"], footprint["center"]["y"])
   raise ValueError("Unsupported robot footprint")
 def clear_width(door, occupied):
   line = LineString(

@@ -42,8 +42,8 @@ class MapValidationTests(unittest.TestCase):
   def test_synthetic_validation_block_and_clear_widths(self):
     result = validate(SOURCE)
     self.assertTrue(result["ok"], result)
-    self.assertEqual(result["radius"], 0.27)
-    self.assertAlmostEqual(result["required_width"], 0.64)
+    self.assertAlmostEqual(result["radius"], 0.27 + 0.068)
+    self.assertAlmostEqual(result["required_width"], 2 * (0.338 + 0.05))
     self.assertEqual(len(result["clear_widths"]), 7)
     for width in result["clear_widths"].values():
       self.assertAlmostEqual(width, 1.2)
@@ -75,6 +75,8 @@ class MapValidationTests(unittest.TestCase):
     obstacle["center"] = [0, 0.8]
     obstacle["size"] = [2, 0.2]
     self.assertAlmostEqual(clear_width(door, rectangle(obstacle)), 1.2)
+  def test_offset_circle_radius_covers_rotation_about_the_origin(self):
+    self.assertAlmostEqual(radius_for(dict(type="circle", radius=0.27, center=dict(x=0.03, y=-0.04))), 0.32)
   def test_unsupported_footprint_is_rejected(self):
     with self.assertRaisesRegex(ValueError, "Unsupported robot footprint"):
       radius_for(dict(type="rect", size=[0.6, 0.8]))

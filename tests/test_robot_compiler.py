@@ -31,7 +31,7 @@ class RobotCompilerTests(unittest.TestCase):
     Draft202012Validator.check_schema(yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8")))
   def test_compiles_explicit_rep103_values_and_provisional_fields(self):
     self.assertEqual(compile_robot(SOURCE), {**self.spec, "frame": "rep103"})
-    self.assertEqual(self.spec["footprint"], {"type": "circle", "radius": 0.27})
+    self.assertEqual(self.spec["footprint"], {"type": "circle", "radius": 0.27, "center": {"x": 0.068, "y": 0.0}})
     self.assertEqual(self.spec["body"], {"z_min": 0.0, "z_max": 0.25})
     self.assertEqual(self.spec["provisional"], ["max_linear_acceleration", "max_angular_acceleration"] +
                      [f"lidar.{name}" for name in self.spec["lidar"] if name != "mount"])
@@ -50,7 +50,8 @@ class RobotCompilerTests(unittest.TestCase):
     self.assertNotIn(str(SOURCE), contents.decode("utf-8"))
   def test_rejects_every_missing_field(self):
     paths = [(key,) for key in self.spec]
-    paths += [("footprint", "type"), ("footprint", "radius"), ("body", "z_min"), ("body", "z_max")]
+    paths += [("footprint", "type"), ("footprint", "radius"), ("footprint", "center"), ("body", "z_min"), ("body", "z_max")]
+    paths += [("footprint", "center", key) for key in self.spec["footprint"]["center"]]
     paths += [("lidar", key) for key in self.spec["lidar"]]
     paths += [("lidar", "mount", key) for key in self.spec["lidar"]["mount"]]
     for path in paths:
@@ -63,17 +64,19 @@ class RobotCompilerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
           self._compile(spec)
   def test_rejects_unknown_fields_at_every_level(self):
-    for parent in [None, "footprint", "body", "lidar", "mount"]:
+    for parent in [None, "footprint", "center", "body", "lidar", "mount"]:
       with self.subTest(parent=parent):
         spec = copy.deepcopy(self.spec)
-        target = spec["lidar"]["mount"] if parent == "mount" else (spec if parent is None else spec[parent])
+        nested = {"mount": spec["lidar"]["mount"], "center": spec["footprint"]["center"]}
+        target = nested.get(parent) or (spec if parent is None else spec[parent])
         target["unknown"] = 1
         with self.assertRaises(ValueError):
           self._compile(spec)
   def test_rejects_invalid_types_and_contract(self):
     for field, value in [
-      ("version", 1), ("version", False), ("id", "../outside"),
-      ("footprint", {"type": "rect", "radius": 0.27}),
+      ("version", 0), ("version", 2), ("version", False), ("id", "../outside"),
+      ("footprint", {"type": "rect", "radius": 0.27, "center": {"x": 0, "y": 0}}),
+      ("footprint", {"type": "circle", "radius": 0.27, "center": [0, 0]}),
       ("body", []), ("min_linear_velocity", True), ("max_linear_velocity", "1.0"),
       ("provisional", ["unknown"]), ("provisional", ["body.missing"]),
       ("provisional", [1]), ("provisional", ["body", "body"]),
@@ -108,6 +111,7 @@ class RobotCompilerTests(unittest.TestCase):
         variants.append(spec)
     numeric_paths = [(key,) for key in self.spec if key.startswith(("min_", "max_"))]
     numeric_paths += [("footprint", "radius"), ("body", "z_min"), ("body", "z_max")]
+    numeric_paths += [("footprint", "center", key) for key in self.spec["footprint"]["center"]]
     numeric_paths += [("lidar", key) for key in self.spec["lidar"] if key != "mount"]
     numeric_paths += [("lidar", "mount", key) for key in self.spec["lidar"]["mount"]]
     for path in numeric_paths:
@@ -124,7 +128,8 @@ class RobotCompilerTests(unittest.TestCase):
           self._compile(spec)
   def test_rejects_duplicate_yaml_keys_at_every_level(self):
     for text in [
-      "version: 0\nversion: 1\n",
+      "version: 1\nversion: 1\n",
+      "footprint:\n  center: {x: 0, x: 1}\n",
       "footprint:\n  radius: 0.27\n  radius: 0.3\n",
       "body:\n  z_min: 0\n  z_min: 1\n",
       "lidar:\n  beam_count: 400\n  beam_count: 360\n",
