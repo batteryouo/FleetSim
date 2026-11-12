@@ -150,6 +150,7 @@ cadence/
 │   ├── world/
 │   ├── robots/
 │   ├── bridge/         # Interface layer; the only place frames are converted
+│   ├── transport/      # World protocol server: ZeroMQ peer and MessagePack codec
 │   ├── native/         # Tracked .gdextension descriptor; bin/ is ignored
 │   ├── tests/          # Headless Godot test scripts
 │   └── generated/      # Generated assets; never edit by hand
@@ -221,18 +222,29 @@ The 2D query runtime is removed following confirmation of the selection in
 `docs/benchmark-m3.md`. Layered source-plan extraction now produces local draft
 maps with explicit overrides and PDF overlays; see `docs/plan-extraction.md`.
 Generated site maps and manual site overrides remain under ignored tmp/.
-Stage 2, robot collision handling, noise, and agent transport remain outside
+Milestone 4 adds the versioned World protocol (`docs/protocol.md`): ZeroMQ and
+MessagePack between a headless Godot World server and the Python `env.World`
+client, with configure, reset, and lockstep step requests. The World logic is
+transport-independent. The physics step and control period are configured
+separately, and one scan is taken per control period. Same-seed runs produce
+bit-identical replies across processes. Robot spec v1 adds an explicit footprint
+centre, so the A100's collision disc sits 0.068 m ahead of the axle frame.
+Stage 2, robot collision handling, noise, and multi-node operation remain outside
 this implementation.
+
+## Decisions
+
+- Training paradigm: Python-native reinforcement learning first, through the PettingZoo wrapper planned for Milestone 7. ROS 2 / Nav2 is not in the loop; the protocol stays extensible for a later adapter.
+- Transport and serialization: ZeroMQ and MessagePack, kept separate from the World logic (`docs/protocol.md`).
+- Control rate: 10 Hz by default, with one lidar scan per control step and a separately configured physics step.
 
 ## Open Questions
 
 These are undecided. Do not assume an answer; ask, or implement in a way that keeps the decision open.
 
-- Training paradigm: reinforcement learning with custom observations, or a full ROS 2 / Nav2 stack in the loop?
 - Sensors: lidar and odometry only, or also cameras?
 - Robot platform: A100. Its URDF and Gazebo xacro files are local references under `tmp/`, not tracked. The lidar model is needed to confirm scan parameters (beam count, angle range, range limits). Controller configuration is needed to confirm the provisional acceleration limits.
 - Map source: hand-written specs, an existing occupancy grid, or a floor plan?
 - Blender version to pin; broader Python and Godot version compatibility to validate.
-- Transport and serialization: TCP or ZeroMQ; JSON or MessagePack.
 - Collision termination scope: only the robots involved, or the whole episode?
-- Control rate and lidar rate.
+- Lidar rate below the control rate, and noise models; Milestone 4 scans once per control period without noise.

@@ -114,7 +114,9 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Windows x86_64 passed all 89 tests through map v1 and layered plan extraction. Arch Linux x86_64 passed the 37-test M1/M2 suite at commit `6ca0d76`, including native `.so` loading and dynamic dependency checks; subsequent native lidar, map, and extraction changes are not yet validated on Linux. Environment versions and commands are recorded in `docs/native-build.md`. macOS remains unvalidated.
 - Commits are local and not pushed.
 - References are under `tmp/` (robot files under `tmp/references/A100/`); `docs/` and `.gitignore` are tracked; `tmp/` stays ignored.
-- Milestone 3 stage 1 provides the confirmed Jolt 3D snapshot-driven lidar kernel through C++ GDExtension, headless geometry/lifecycle/repeatability tests, and an exported-release benchmark. The 2D runtime is removed; `docs/benchmark-m3.md` preserves the historical comparison and decision rule. `docs/benchmark-native-lidar.md` records the GDScript/C++ comparison. No stage 2, noise, collision response, or Python bridge is implemented.
+- Milestone 3 stage 1 provides the confirmed Jolt 3D snapshot-driven lidar kernel through C++ GDExtension, headless geometry/lifecycle/repeatability tests, and an exported-release benchmark. The 2D runtime is removed; `docs/benchmark-m3.md` preserves the historical comparison and decision rule. `docs/benchmark-native-lidar.md` records the GDScript/C++ comparison. No stage 2, noise, or collision response is implemented.
+- Milestone 4 provides the versioned World protocol (`docs/protocol.md`): ZeroMQ and MessagePack, a transport-independent lockstep World runtime with configure/reset/step, separate physics step and control period (10 Hz default, one scan per control step), and same-seed bit-identical replies across processes. The ZMTP peer and MessagePack codec are GDScript, so the World needs no native messaging library. Version 1 serves one client and one robot spec; multi-node operation needs a new protocol version.
+- Robot spec v1 keeps the axle as the reference frame and adds an explicit footprint centre; the A100 disc (r 0.27 m) sits 0.068 m ahead of the axle. Map validation uses radius plus centre offset so robots may turn in place.
 - After Milestone 3: the map round is split into (a) map spec v1 on a synthetic map and (b) source-plan extraction using a locally recorded working scale; physical measurement upgrades the scale status rather than unblocking the work. Its scope: walls, room_rows with explicit room IDs and per-room overrides, obstacles with height ranges, annotations with nav_point, spawn regions, scale calibration, obstacle catalog, overlay preview under `tmp/`, and a configuration-space connectivity test using the robot spec radius and body height plus named clearance, with all target nav_points reachable from the start annotation.
 
 ## Open Questions
@@ -123,6 +125,6 @@ Games need authoritative servers, prediction, and rollback because players inter
 - Lidar model, needed for scan parameters (beam count, angle range, range limits).
 - Whether cameras will be used.
 - Policy network design (does not block the environment).
-- Transport and serialization, control rate, and lidar rate.
+- A lidar rate below the control rate, and noise models.
 - Whether collision terminates only the involved robots or the whole episode.
 - A physical measurement to upgrade the locally recorded scale status; a derived working scale allows source-plan work to proceed.

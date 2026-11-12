@@ -6,7 +6,9 @@ Milestone 2 adds a robot spec compiler and batched float64 differential-drive
 kinematics implemented in a C++ GDExtension. Milestone 3 stage 1 adds batched lidar
 queries implemented in the C++ GDExtension using Jolt 3D, with an exported-release benchmark.
 Layered source-plan tooling produces local ward drafts and PDF overlays.
-Robot collision handling, noise, and agent transport remain later work.
+Milestone 4 adds a versioned ZeroMQ/MessagePack World protocol and the Python
+`env.World` lockstep client. Robot collision handling, noise, and multi-node
+operation remain later work.
 
 ## Setup
 
@@ -139,6 +141,19 @@ the 2D runtime has been removed. See [native lidar comparison](docs/benchmark-na
 for the GDScript/C++ release comparison and reproduction commands. New runs measure Jolt only and report `target_met`
 for full runs. `tools.report_m3` renders archived two-backend results only.
 
+Milestone 4 starts real headless Worlds over ZeroMQ. Its tests include a
+three-robot synthetic-ward rollout that must give bit-identical replies in separate
+processes for the same seed. They also check substep kinematics against an
+independent model, scans against corridor geometry with offset robot discs,
+rejected requests that leave the World unchanged, and process exit behaviour:
+
+```powershell
+python -m unittest discover -s tests -p test_milestone4.py -v
+```
+
+See [World protocol v1](docs/protocol.md) for messages, errors, and a Python
+example.
+
 To run only the headless ray check against the generated map:
 
 ```powershell
@@ -156,7 +171,7 @@ world with a simple overhead camera:
 The overhead scene displays the Milestone 1 map. Milestone 2 provides the headless
 kinematics API without adding robot visual nodes.
 
-See [map spec v1](docs/map-spec.md) and [robot spec v0](docs/robot-spec.md) for the
+See [map spec v1](docs/map-spec.md) and [robot spec v1](docs/robot-spec.md) for the
 source and compiled contracts and
 [project brief](docs/project-brief.md) for architecture and later milestones.
 Local references and previews belong under ignored `tmp/`; never copy or commit
